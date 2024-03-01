@@ -1,0 +1,9 @@
+# Linting configuration for golangci-lint
+# See https://golangci-lint.run/usage/configuration/ for details
+
+linters:
+    enable:
+        - gosec
+        - godot
+        - misspell
+        - stylecheck
