@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	_ "golang.org/x/exp/maps"
 )
 
 // Load a set of languages from an io.Reader.
@@ -59,5 +61,10 @@ func LoadLanguagesFromFile(path string) (LanguageMap, error) {
 		}
 	}()
 
-	return LoadLanguages(f)
+	result, err := LoadLanguages(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load languages from %q. %w", path, err)
+	}
+
+	return result, nil
 }

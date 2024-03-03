@@ -6,11 +6,13 @@
 package main
 
 import (
-	"encoding/csv"
 	"fmt"
 	"io"
 	"os"
-	"strings"
+	"slices"
+
+	"github.com/andrejacobs/go-analysis/internal/alphabet"
+	"golang.org/x/exp/maps"
 )
 
 const (
@@ -83,37 +85,20 @@ func Languages() LanguageMap {
 }
 
 func processCSV(w io.Writer, path string) error {
-	f, err := os.Open(path)
+	languages, err := alphabet.LoadLanguagesFromFile(path)
 	if err != nil {
-		return fmt.Errorf("failed to open %s. %w", path, err)
+		return err
 	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to close %s. %v", path, err)
-		}
-	}()
 
-	r := csv.NewReader(f)
+	keys := maps.Keys(languages)
+	slices.Sort(keys)
 
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("failed to process %s. %w", path, err)
-		}
-
-		if len(record) < 3 {
-			continue
-		}
-
-		if strings.HasPrefix(record[0], "#") {
-			continue
-		}
+	for _, code := range keys {
+		lang := languages[code]
 
 		io.WriteString(w, "\t"+fmt.Sprintf(`"%s": Language{Name: "%s", Code: "%s", Letters: "%s"},`+"\n",
-			record[0], record[1], record[0], strings.ToLower(record[2])))
+			code, lang.Name, lang.Code, lang.Letters))
 	}
+
 	return nil
 }
