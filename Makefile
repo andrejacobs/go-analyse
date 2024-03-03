@@ -123,3 +123,4 @@ go-tidy:
 .PHONY: go-generate
 go-generate:
 	go generate ./...
+	gofmt -w internal/alphabet/languages.go
