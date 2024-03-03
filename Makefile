@@ -114,6 +114,12 @@ check: check-formatting check-lint
 go-deps:
 	go mod download
 
+# Tidy up module references (also donwloads deps)
 .PHONY: go-tidy
 go-tidy:
 	go mod tidy
+
+# Run any generators
+.PHONY: go-generate
+go-generate:
+	go generate ./...

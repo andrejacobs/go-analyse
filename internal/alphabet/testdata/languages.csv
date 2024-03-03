@@ -1,0 +1,14 @@
+#code,name,letters
+#Sourced from: https://en.wikipedia.org/wiki/Wikipedia:Language_recognition_chart,,
+af,Afrikaans,abcdefghijklmnopqrstuvwxyzáêéèëïíîôóúû
+en,English,abcdefghijklmnopqrstuvwxyz
+nl,Dutch,abcdefghijklmnopqrstuvwxyzàäèéëïĳöü
+da,Danish,ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ
+fi,Finnish,abcdefghijklmnopqrstuvwxyzäö
+sv,Swedish,abcdefghijklmnopqrstuvwxyzåäö
+et,Estonian,abcdefghijklmnopqrstuvwxyzäöõü
+de,German,abcdefghijklmnopqrstuvwxyzäöüß
+es,Spanish,abcdefghijklmnopqrstuvwxyzáéíñóúü
+ar,Arabic,أابتثجحخدذرزسشصضطظعغفقكلمنهؤوئىيء
+
+#NOTE: The danish row contains uppercase characters to test the generator creates only lowercase letters,,
