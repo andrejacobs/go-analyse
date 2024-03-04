@@ -1,5 +1,7 @@
 # Datasets used
 
+Links to various corpora and research material.
+
 ## Alphabets
 
 https://en.wikipedia.org/wiki/Wikipedia:Language_recognition_chart
@@ -37,3 +39,14 @@ Gold mine corpora: https://wortschatz.uni-leipzig.de/en
 
 -   King James Bible: https://www.gutenberg.org/ebooks/10
     -   english: https://www.gutenberg.org/ebooks/10.txt.utf-8
+
+### Google N-gram
+
+-   N-gram viewer: https://books.google.com/ngrams/
+-   N-gram corporar: https://storage.googleapis.com/books/ngrams/books/datasetsv2.html
+
+## Miscellaneous
+
+-   Peter Norvig's Mayzner Revisited: https://norvig.com/mayzner.html
+-   English-Corpora: https://www.english-corpora.org/
+-   University of Oxford: https://libguides.bodleian.ox.ac.uk/english-language/Corpora
