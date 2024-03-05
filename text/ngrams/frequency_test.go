@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"io"
 	"slices"
-	"sort"
 	"strings"
 	"testing"
 	"unicode"
 
 	"github.com/andrejacobs/go-analysis/internal/alphabet"
+	"github.com/andrejacobs/go-collection/collection"
 	"golang.org/x/exp/maps"
 )
 
@@ -121,22 +121,9 @@ func ngram(input string, lang alphabet.Language, size int) map[string]uint64 {
 }
 
 func print(grams map[string]uint64) {
-	//Replace with generic Pair from my other libs
-	type kv struct {
-		key   string
-		value uint64
-	}
-
-	pairs := make([]kv, 0, len(grams))
-	for k, v := range grams {
-		pairs = append(pairs, kv{k, v})
-	}
-
-	sort.Slice(pairs, func(i, j int) bool {
-		return pairs[i].value > pairs[j].value
-	})
+	pairs := collection.MapSortedByValue(grams, false)
 
 	for _, pair := range pairs {
-		fmt.Printf("%s = %d\n", pair.key, pair.value)
+		fmt.Printf("%s = %d\n", pair.Key, pair.Value)
 	}
 }
