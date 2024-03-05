@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"sort"
 	"strings"
 	"testing"
 	"unicode"
@@ -50,23 +51,27 @@ func mono(input string, lang alphabet.Language) {
 
 func bi(input string, lang alphabet.Language) {
 	fmt.Printf("bigrams: %q\n", input)
-	ngram(input, lang, 2)
+	grams := ngram(input, lang, 2)
+	print(grams)
 	fmt.Println()
 }
 
 func tri(input string, lang alphabet.Language) {
 	fmt.Printf("trigrams: %q\n", input)
-	ngram(input, lang, 3)
+	grams := ngram(input, lang, 3)
+	print(grams)
 	fmt.Println()
 }
 
 func quad(input string, lang alphabet.Language) {
 	fmt.Printf("quadgrams: %q\n", input)
-	ngram(input, lang, 4)
+	grams := ngram(input, lang, 4)
+	print(grams)
 	fmt.Println()
 }
 
-func ngram(input string, lang alphabet.Language, size int) {
+func ngram(input string, lang alphabet.Language, size int) map[string]uint64 {
+	result := make(map[string]uint64)
 	buf := make([]rune, size)
 	pos := 0
 	count := 0
@@ -97,11 +102,41 @@ func ngram(input string, lang alphabet.Language, size int) {
 		count++
 
 		if count == size {
-			fmt.Printf("%s\n", string(buf[pos:]))
+			gram := string(buf[pos:])
 
 			copy(buf[pos:], buf[pos+1:])
 			pos = 0
 			count = size - 1
+
+			freq, exists := result[gram]
+			if !exists {
+				result[gram] = 1
+			} else {
+				result[gram] = freq + 1
+			}
 		}
+	}
+
+	return result
+}
+
+func print(grams map[string]uint64) {
+	//Replace with generic Pair from my other libs
+	type kv struct {
+		key   string
+		value uint64
+	}
+
+	pairs := make([]kv, 0, len(grams))
+	for k, v := range grams {
+		pairs = append(pairs, kv{k, v})
+	}
+
+	sort.Slice(pairs, func(i, j int) bool {
+		return pairs[i].value > pairs[j].value
+	})
+
+	for _, pair := range pairs {
+		fmt.Printf("%s = %d\n", pair.key, pair.value)
 	}
 }
