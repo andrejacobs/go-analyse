@@ -121,7 +121,7 @@ func ngram(input string, lang alphabet.Language, size int) map[string]uint64 {
 }
 
 func print(grams map[string]uint64) {
-	pairs := collection.MapSortedByValue(grams, false)
+	pairs := collection.MapSortedByValue(grams, collection.Descending)
 
 	for _, pair := range pairs {
 		fmt.Printf("%s = %d\n", pair.Key, pair.Value)
