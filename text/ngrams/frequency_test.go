@@ -9,7 +9,7 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/andrejacobs/go-analysis/internal/alphabet"
+	"github.com/andrejacobs/go-analysis/text/alphabet"
 	"github.com/andrejacobs/go-collection/collection"
 	"golang.org/x/exp/maps"
 )

@@ -54,7 +54,7 @@ Overview of the packages provided by this module
     -   Calculate monograms (1-gram), bigrams (2-grams), trigrams (3-grams), quadgrams (4-grams) and
         quintgrams (5-grams) for either letters or words on a given corpora.
 
--   `internal/alphabet` TODO: rename once promoted
+-   `text/alphabet`
     -   Describe the valid set of unicode runes that are used in other packages to perform text analysis.
 
 ## Reference
