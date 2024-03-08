@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/andrejacobs/go-analysis/text/alphabet"
@@ -24,6 +25,13 @@ func TestParseLetterTokens(t *testing.T) {
 		// raise an error
 		// set of ngrams check
 	}{
+		{
+			desc:      "Monogram - Alice",
+			filename:  "testdata/en-alice-partial.txt",
+			tokenSize: 1,
+			language:  alphabet.Languages()["en"],
+			expected:  collection.NewSetFrom(strings.Split(alphabet.Languages()["en"].Letters, "")),
+		},
 		{
 			desc:      "Bigram - Alice",
 			filename:  "testdata/en-alice-partial.txt",

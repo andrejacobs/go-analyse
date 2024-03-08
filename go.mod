@@ -3,7 +3,7 @@ module github.com/andrejacobs/go-analysis
 go 1.22.0
 
 require (
-	github.com/andrejacobs/go-collection v0.0.0-20240306223129-c1c6720d6f91
+	github.com/andrejacobs/go-collection v0.0.0-20240308225509-9cef8eecfb43
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 )

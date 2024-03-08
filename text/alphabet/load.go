@@ -10,7 +10,7 @@ import (
 	_ "golang.org/x/exp/maps"
 )
 
-// Load a set of languages from an io.Reader.
+// LoadLanguages parses a set of languages from an io.Reader.
 //
 // Expected CSV format in UTF-8: code,name,letters
 // Lines starting with a # is ignored.
@@ -48,8 +48,8 @@ func LoadLanguages(r io.Reader) (LanguageMap, error) {
 	return result, nil
 }
 
-// Load a set of languages from a UTF-8 encoded text file.
-// See LoadLanguages for more details.
+// LoadLanguagesFromFile parses a set of languages from a UTF-8 encoded text file.
+// See [LoadLanguages] for more details.
 func LoadLanguagesFromFile(path string) (LanguageMap, error) {
 	f, err := os.Open(path)
 	if err != nil {
