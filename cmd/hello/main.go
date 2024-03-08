@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/andrejacobs/go-analysis/internal/compiledinfo"
+	"github.com/andrejacobs/go-analyse/internal/compiledinfo"
 )
 
 func main() {

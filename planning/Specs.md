@@ -2,7 +2,7 @@
 
 What is this module for?
 
-go-analysis is a collection of go packages I use to perform various analysis for other projects of mine. The primary
+go-analyse is a collection of go packages I use to perform various analysis for other projects of mine. The primary
 focus at the moment is just on text analysis (e.g. n-grams).
 
 Who is it for?

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/andrejacobs/go-analysis/text/alphabet"
+	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -6,7 +6,7 @@ import (
 	"io"
 	"unicode"
 
-	"github.com/andrejacobs/go-analysis/text/alphabet"
+	"github.com/andrejacobs/go-analyse/text/alphabet"
 )
 
 // RecvTokenFunc will be called when a new token has been parsed from the input stream.

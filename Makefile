@@ -3,7 +3,7 @@ BUILD_OUTPUT_DIR=build
 EXEC_OUTPUT_DIR=${BUILD_OUTPUT_DIR}/bin
 REPORT_OUTPUT_DIR=${BUILD_OUTPUT_DIR}/reports
 # Go module name for this repo
-MODULE_NAME="github.com/andrejacobs/go-analysis"
+MODULE_NAME="github.com/andrejacobs/go-analyse"
 # The main go file to compile CLI executables from
 INPUT_SRC_FILE="main.go"
 

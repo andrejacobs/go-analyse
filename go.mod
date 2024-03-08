@@ -1,4 +1,4 @@
-module github.com/andrejacobs/go-analysis
+module github.com/andrejacobs/go-analyse
 
 go 1.22.0
 

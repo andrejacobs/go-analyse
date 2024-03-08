@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/andrejacobs/go-analysis/text/alphabet"
-	"github.com/andrejacobs/go-analysis/text/ngrams"
+	"github.com/andrejacobs/go-analyse/text/alphabet"
+	"github.com/andrejacobs/go-analyse/text/ngrams"
 	"github.com/andrejacobs/go-collection/collection"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

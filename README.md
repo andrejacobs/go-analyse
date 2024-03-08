@@ -1,4 +1,4 @@
-# go-analysis
+# go-analyse
 
 Analysis related code written in Go
 

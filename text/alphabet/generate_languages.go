@@ -11,7 +11,7 @@ import (
 	"os"
 	"slices"
 
-	"github.com/andrejacobs/go-analysis/text/alphabet"
+	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"golang.org/x/exp/maps"
 )
 
