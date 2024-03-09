@@ -6,16 +6,31 @@ import (
 
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGeneratedLanguages(t *testing.T) {
 	// Simple unit-test just to ensure the generator was run and produces
 	// some of the expected output
-	assert.Equal(t, alphabet.Languages()["af"], alphabet.Language{Name: "Afrikaans", Code: "af", Letters: "abcdefghijklmnopqrstuvwxyzáêéèëïíîôóúû"})
-	assert.Equal(t, alphabet.Languages()["en"], alphabet.Language{Name: "English", Code: "en", Letters: "abcdefghijklmnopqrstuvwxyz"})
-	assert.Equal(t, alphabet.Languages()["es"], alphabet.Language{Name: "Spanish", Code: "es", Letters: "abcdefghijklmnopqrstuvwxyzáéíñóúü"})
-	assert.Equal(t, alphabet.Languages()["da"], alphabet.Language{Name: "Danish", Code: "da", Letters: "abcdefghijklmnopqrstuvwxyzæøå"})
-	assert.Equal(t, alphabet.Languages()["ar"], alphabet.Language{Name: "Arabic", Code: "ar", Letters: "أابتثجحخدذرزسشصضطظعغفقكلمنهؤوئىيء"})
+	lang, err := alphabet.Builtin("af")
+	require.NoError(t, err)
+	assert.Equal(t, lang, alphabet.Language{Name: "Afrikaans", Code: "af", Letters: "abcdefghijklmnopqrstuvwxyzáêéèëïíîôóúû"})
+
+	lang, err = alphabet.Builtin("en")
+	require.NoError(t, err)
+	assert.Equal(t, lang, alphabet.Language{Name: "English", Code: "en", Letters: "abcdefghijklmnopqrstuvwxyz"})
+
+	lang, err = alphabet.Builtin("es")
+	require.NoError(t, err)
+	assert.Equal(t, lang, alphabet.Language{Name: "Spanish", Code: "es", Letters: "abcdefghijklmnopqrstuvwxyzáéíñóúü"})
+
+	lang, err = alphabet.Builtin("da")
+	require.NoError(t, err)
+	assert.Equal(t, lang, alphabet.Language{Name: "Danish", Code: "da", Letters: "abcdefghijklmnopqrstuvwxyzæøå"})
+
+	lang, err = alphabet.Builtin("ar")
+	require.NoError(t, err)
+	assert.Equal(t, lang, alphabet.Language{Name: "Arabic", Code: "ar", Letters: "أابتثجحخدذرزسشصضطظعغفقكلمنهؤوئىيء"})
 
 	testCases := []struct {
 		code     alphabet.LanguageCode
@@ -30,7 +45,9 @@ func TestGeneratedLanguages(t *testing.T) {
 	}
 	for i, tC := range testCases {
 		t.Run(fmt.Sprintf("RuneCheck-%d", i), func(t *testing.T) {
-			assert.Equal(t, tC.expected, alphabet.Languages()[tC.code].ContainsRune(tC.check))
+			lang, err := alphabet.Builtin(tC.code)
+			require.NoError(t, err)
+			assert.Equal(t, tC.expected, lang.ContainsRune(tC.check))
 		})
 	}
 }

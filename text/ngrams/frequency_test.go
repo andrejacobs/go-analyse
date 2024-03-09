@@ -108,13 +108,39 @@ func TestFrequencyAdd(t *testing.T) {
 	assert.Equal(t, expected, freq.EntriesSortedByCount())
 }
 
+func TestFrequencyEntriesSortedByCount(t *testing.T) {
+	freq := ngrams.NewFrequencyTable()
+	freq.Add("a", 1)
+	freq.Add("b", 2)
+	freq.Add("c", 1)
+	freq.Add("d", 1)
+	freq.Add("e", 1)
+	freq.Add("f", 2)
+
+	expected := []ngrams.Frequency{
+		{Token: "b", Count: 2},
+		{Token: "f", Count: 2},
+		{Token: "a", Count: 1},
+		{Token: "c", Count: 1},
+		{Token: "d", Count: 1},
+		{Token: "e", Count: 1},
+	}
+
+	// Should always produce the exact same sort order
+	for i := 0; i < 100; i++ {
+		assert.Equal(t, expected, freq.EntriesSortedByCount())
+	}
+}
+
 // // Use this to generate the test data
 // // Not ideal to be doing chicken-n-egg and generating the testdata using the code
 // // you actually want to test. I will just have to be 100% sure of the results
 // func TestGenerateFrequencies(t *testing.T) {
-// 	genFn := func(input string, output string, lang alphabet.LanguageCode, tokenSize int) {
+// 	genFn := func(input string, output string, langCode alphabet.LanguageCode, tokenSize int) {
+// 		lang, err := alphabet.Builtin(langCode)
+// 		require.NoError(t, err)
 // 		ft, err := ngrams.FrequencyTableByParsingLetters(context.Background(),
-// 			input, alphabet.Languages()[lang], tokenSize)
+// 			input, lang, tokenSize)
 // 		require.NoError(t, err)
 // 		out, err := os.Create(output)
 // 		require.NoError(t, err)
@@ -122,11 +148,16 @@ func TestFrequencyAdd(t *testing.T) {
 // 		out.Close()
 // 	}
 
-// 	// genFn("testdata/en-control.txt", "testdata/freq-1-en-control.csv", "en", 1)
-// 	// genFn("testdata/en-control.txt", "testdata/freq-2-en-control.csv", "en", 2)
-// 	// genFn("testdata/af-control.txt", "testdata/freq-1-af-control.csv", "af", 1)
-// 	// genFn("testdata/af-control.txt", "testdata/freq-2-af-control.csv", "af", 2)
+// 	genFn("testdata/en-control.txt", "testdata/freq-1-en-control.csv", "en", 1)
+// 	genFn("testdata/en-control.txt", "testdata/freq-2-en-control.csv", "en", 2)
+// 	genFn("testdata/af-control.txt", "testdata/freq-1-af-control.csv", "af", 1)
+// 	genFn("testdata/af-control.txt", "testdata/freq-2-af-control.csv", "af", 2)
 
 // 	genFn("testdata/en-alice-partial.txt", "testdata/freq-1-en-alice.csv", "en", 1)
 // 	genFn("testdata/en-alice-partial.txt", "testdata/freq-2-en-alice.csv", "en", 2)
+// 	genFn("testdata/en-alice-partial.txt", "testdata/freq-3-en-alice.csv", "en", 3)
+
+// 	genFn("testdata/fr-alice-partial.txt", "testdata/freq-1-fr-alice.csv", "fr", 1)
+// 	genFn("testdata/fr-alice-partial.txt", "testdata/freq-2-fr-alice.csv", "fr", 2)
+// 	genFn("testdata/fr-alice-partial.txt", "testdata/freq-3-fr-alice.csv", "fr", 3)
 // }

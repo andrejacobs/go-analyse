@@ -131,7 +131,7 @@ func (ft *FrequencyTable) EntriesSortedByCount() []Frequency {
 		} else if a.Count < b.Count {
 			return 1
 		} else {
-			return 0
+			return strings.Compare(a.Token, b.Token)
 		}
 	})
 

@@ -37,5 +37,10 @@ func TestLoadLanguagesFromFile(t *testing.T) {
 	assert.Contains(t, languages, alphabet.LanguageCode("af"))
 
 	// generated languages.go should be the exact same as loading "testdata/languages.csv"
-	assert.Equal(t, alphabet.Languages(), languages)
+	for k, v := range languages {
+		b, err := alphabet.Builtin(k)
+		require.NoError(t, err)
+
+		assert.Equal(t, v, b)
+	}
 }

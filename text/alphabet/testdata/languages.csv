@@ -10,5 +10,6 @@ et,Estonian,abcdefghijklmnopqrstuvwxyzäöõü
 de,German,abcdefghijklmnopqrstuvwxyzäöüß
 es,Spanish,abcdefghijklmnopqrstuvwxyzáéíñóúü
 ar,Arabic,أابتثجحخدذرزسشصضطظعغفقكلمنهؤوئىيء
+fr,French,abcdefghijklmnopqrstuvwxyzàâæçéèêëîïôœùûüÿ
 
 #NOTE: The danish row contains uppercase characters to test the generator creates only lowercase letters,,

@@ -56,6 +56,10 @@ func writeHeader(w io.Writer) error {
 
 package alphabet
 
+import (
+	"fmt"
+)
+
 var languages = LanguageMap{
 `
 
@@ -71,9 +75,13 @@ func writeFooter(w io.Writer) error {
 	const footer = `
 }
 
-// Languages returns the map of languages
-func Languages() LanguageMap {
-	return languages
+// Language returns the built-in language for the given ISO 639 set 1 language
+func Builtin(code LanguageCode) (Language, error) {
+	lang, exists := languages[code]
+	if !exists {
+		return Language{}, fmt.Errorf("no built-in language found with code %q", code)
+	}
+	return lang, nil
 }
 `
 	_, err := io.WriteString(w, footer)

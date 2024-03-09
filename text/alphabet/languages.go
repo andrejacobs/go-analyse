@@ -2,6 +2,10 @@
 
 package alphabet
 
+import (
+	"fmt"
+)
+
 var languages = LanguageMap{
 	"af": Language{Name: "Afrikaans", Code: "af", Letters: "abcdefghijklmnopqrstuvwxyzáêéèëïíîôóúû"},
 	"ar": Language{Name: "Arabic", Code: "ar", Letters: "أابتثجحخدذرزسشصضطظعغفقكلمنهؤوئىيء"},
@@ -11,11 +15,16 @@ var languages = LanguageMap{
 	"es": Language{Name: "Spanish", Code: "es", Letters: "abcdefghijklmnopqrstuvwxyzáéíñóúü"},
 	"et": Language{Name: "Estonian", Code: "et", Letters: "abcdefghijklmnopqrstuvwxyzäöõü"},
 	"fi": Language{Name: "Finnish", Code: "fi", Letters: "abcdefghijklmnopqrstuvwxyzäö"},
+	"fr": Language{Name: "French", Code: "fr", Letters: "abcdefghijklmnopqrstuvwxyzàâæçéèêëîïôœùûüÿ"},
 	"nl": Language{Name: "Dutch", Code: "nl", Letters: "abcdefghijklmnopqrstuvwxyzàäèéëïĳöü"},
 	"sv": Language{Name: "Swedish", Code: "sv", Letters: "abcdefghijklmnopqrstuvwxyzåäö"},
 }
 
-// Languages returns the map of languages
-func Languages() LanguageMap {
-	return languages
+// Language returns the built-in language for the given ISO 639 set 1 language
+func Builtin(code LanguageCode) (Language, error) {
+	lang, exists := languages[code]
+	if !exists {
+		return Language{}, fmt.Errorf("no built-in language found with code %q", code)
+	}
+	return lang, nil
 }

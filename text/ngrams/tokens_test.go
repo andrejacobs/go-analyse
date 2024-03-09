@@ -15,6 +15,11 @@ import (
 )
 
 func TestParseLetterTokens(t *testing.T) {
+	enLang, err := alphabet.Builtin("en")
+	require.NoError(t, err)
+	afLang, err := alphabet.Builtin("af")
+	require.NoError(t, err)
+
 	testCases := []struct {
 		desc      string
 		filename  string
@@ -29,42 +34,42 @@ func TestParseLetterTokens(t *testing.T) {
 			desc:      "EN - Control Monograms",
 			filename:  "testdata/en-control.txt",
 			tokenSize: 1,
-			language:  alphabet.Languages()["en"],
+			language:  enLang,
 			expected:  "testdata/freq-1-en-control.csv",
 		},
 		{
 			desc:      "EN - Control Bigrams",
 			filename:  "testdata/en-control.txt",
 			tokenSize: 2,
-			language:  alphabet.Languages()["en"],
+			language:  enLang,
 			expected:  "testdata/freq-2-en-control.csv",
 		},
 		{
 			desc:      "AF - Control Monograms",
 			filename:  "testdata/af-control.txt",
 			tokenSize: 1,
-			language:  alphabet.Languages()["af"],
+			language:  afLang,
 			expected:  "testdata/freq-1-af-control.csv",
 		},
 		{
 			desc:      "AF - Control Bigrams",
 			filename:  "testdata/af-control.txt",
 			tokenSize: 2,
-			language:  alphabet.Languages()["af"],
+			language:  afLang,
 			expected:  "testdata/freq-2-af-control.csv",
 		},
 		{
 			desc:      "Monogram - Alice",
 			filename:  "testdata/en-alice-partial.txt",
 			tokenSize: 1,
-			language:  alphabet.Languages()["en"],
+			language:  enLang,
 			expected:  "testdata/freq-1-en-alice.csv",
 		},
 		{
 			desc:      "Bigram - Alice",
 			filename:  "testdata/en-alice-partial.txt",
 			tokenSize: 2,
-			language:  alphabet.Languages()["en"],
+			language:  enLang,
 			expected:  "testdata/freq-2-en-alice.csv",
 		},
 	}
