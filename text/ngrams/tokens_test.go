@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/andrejacobs/go-analyse/text/alphabet"
@@ -20,7 +19,7 @@ func TestParseLetterTokens(t *testing.T) {
 		filename  string
 		tokenSize int
 		language  alphabet.Language
-		expected  collection.Set[string]
+		expected  string
 		//TODO: support context cancel, with check
 		// raise an error
 		// set of ngrams check
@@ -30,18 +29,21 @@ func TestParseLetterTokens(t *testing.T) {
 			filename:  "testdata/en-alice-partial.txt",
 			tokenSize: 1,
 			language:  alphabet.Languages()["en"],
-			expected:  collection.NewSetFrom(strings.Split(alphabet.Languages()["en"].Letters, "")),
+			expected:  "testdata/freq-1-en-alice.csv",
 		},
 		{
 			desc:      "Bigram - Alice",
 			filename:  "testdata/en-alice-partial.txt",
 			tokenSize: 2,
 			language:  alphabet.Languages()["en"],
-			expected:  collection.NewSetFrom([]string{"ae"}),
+			expected:  "testdata/freq-2-en-alice.csv",
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			exp, err := tokensFromFrequencyFile(tC.expected)
+			require.NoError(t, err)
+
 			f, err := os.Open(tC.filename)
 			require.NoError(t, err)
 			defer f.Close()
@@ -59,10 +61,21 @@ func TestParseLetterTokens(t *testing.T) {
 				})
 			require.NoError(t, err)
 
-			assert.Equal(t, tC.expected, result)
+			assert.Equal(t, exp, result)
 		})
 	}
 }
 
-//TODO: Add an expected file that we load the set from
-// bigrams-en-alice-partial.txt
+func tokensFromFrequencyFile(path string) (collection.Set[string], error) {
+	freq, err := ngrams.LoadFrequenciesFromFile(path)
+	if err != nil {
+		return collection.Set[string]{}, err
+	}
+
+	result := collection.NewSetWithCapacity[string](freq.Len())
+	for _, e := range freq.Entries() {
+		result.Insert(e.Token)
+	}
+
+	return result, nil
+}

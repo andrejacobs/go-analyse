@@ -2,6 +2,7 @@ package ngrams_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -71,3 +72,56 @@ func TestLoadFrequenciesParseErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestFrequenciesLoadAndSave(t *testing.T) {
+	freq := ngrams.NewFrequencyTable()
+	freq.Add("he", 1)
+	freq.Add("he", 2)
+	freq.Add("she", 1)
+	freq.Add("the", 100)
+
+	f, err := os.CreateTemp("", "unit-testing-ngrams")
+	require.NoError(t, err)
+
+	err = freq.Save(f)
+	f.Close()
+	require.NoError(t, err)
+
+	load, err := ngrams.LoadFrequenciesFromFile(f.Name())
+	require.NoError(t, err)
+	assert.Equal(t, freq.EntriesSortedByCount(), load.EntriesSortedByCount())
+}
+
+func TestFrequencyAdd(t *testing.T) {
+	freq := ngrams.NewFrequencyTable()
+	freq.Add("he", 1)
+	freq.Add("he", 2)
+	freq.Add("she", 1)
+	freq.Add("the", 100)
+
+	expected := []ngrams.Frequency{
+		{Token: "the", Count: 100},
+		{Token: "he", Count: 3},
+		{Token: "she", Count: 1},
+	}
+
+	assert.Equal(t, expected, freq.EntriesSortedByCount())
+}
+
+// Use this to generate the test data
+// Not ideal to be doing chicken-n-egg and generating the testdata using the code
+// you actually want to test. I will just have to be 100% sure of the results
+// func TestGenerateFrequencies(t *testing.T) {
+// 	genFn := func(input string, output string, lang alphabet.LanguageCode, tokenSize int) {
+// 		ft, err := ngrams.FrequencyTableByParsingLetters(context.Background(),
+// 			input, alphabet.Languages()[lang], tokenSize)
+// 		require.NoError(t, err)
+// 		out, err := os.Create(output)
+// 		require.NoError(t, err)
+// 		ft.Save(out)
+// 		out.Close()
+// 	}
+
+// 	genFn("testdata/en-alice-partial.txt", "testdata/freq-1-en-alice.csv", "en", 1)
+// 	genFn("testdata/en-alice-partial.txt", "testdata/freq-2-en-alice.csv", "en", 2)
+// }
