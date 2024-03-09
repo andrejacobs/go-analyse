@@ -5,6 +5,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/andrejacobs/go-analyse/text/ngrams"
@@ -24,6 +25,34 @@ func TestParseLetterTokens(t *testing.T) {
 		// raise an error
 		// set of ngrams check
 	}{
+		{
+			desc:      "EN - Control Monograms",
+			filename:  "testdata/en-control.txt",
+			tokenSize: 1,
+			language:  alphabet.Languages()["en"],
+			expected:  "testdata/freq-1-en-control.csv",
+		},
+		{
+			desc:      "EN - Control Bigrams",
+			filename:  "testdata/en-control.txt",
+			tokenSize: 2,
+			language:  alphabet.Languages()["en"],
+			expected:  "testdata/freq-2-en-control.csv",
+		},
+		{
+			desc:      "AF - Control Monograms",
+			filename:  "testdata/af-control.txt",
+			tokenSize: 1,
+			language:  alphabet.Languages()["af"],
+			expected:  "testdata/freq-1-af-control.csv",
+		},
+		{
+			desc:      "AF - Control Bigrams",
+			filename:  "testdata/af-control.txt",
+			tokenSize: 2,
+			language:  alphabet.Languages()["af"],
+			expected:  "testdata/freq-2-af-control.csv",
+		},
 		{
 			desc:      "Monogram - Alice",
 			filename:  "testdata/en-alice-partial.txt",
@@ -55,7 +84,7 @@ func TestParseLetterTokens(t *testing.T) {
 
 			err = ngrams.ParseLetterTokens(ctx, r, tC.language, tC.tokenSize,
 				func(token string, err error) error {
-					assert.Len(t, token, tC.tokenSize)
+					assert.Equal(t, utf8.RuneCountInString(token), tC.tokenSize)
 					result.Insert(token)
 					return nil
 				})

@@ -1,6 +1,8 @@
 package alphabet
 
-import "strings"
+import (
+	"strings"
+)
 
 //go:generate go run generate_languages.go
 

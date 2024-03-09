@@ -19,6 +19,16 @@ type RecvTokenFunc func(token string, err error) error
 func ParseLetterTokens(ctx context.Context, input io.Reader, language alphabet.Language,
 	tokenSize int, recv RecvTokenFunc) error {
 
+	if tokenSize == 0 {
+		return parseLetterMonograms(ctx, input, language, recv)
+	}
+
+	return parseLetterNgrams(ctx, input, language, tokenSize, recv)
+}
+
+func parseLetterNgrams(ctx context.Context, input io.Reader, language alphabet.Language,
+	tokenSize int, recv RecvTokenFunc) error {
+
 	buf := make([]rune, tokenSize)
 	pos := 0
 	count := 0
@@ -54,6 +64,8 @@ loop:
 				continue
 			}
 
+			r = unicode.ToLower(r)
+
 			// Ignore any runes not part of the language
 			if !language.ContainsRune(r) {
 				continue
@@ -75,6 +87,56 @@ loop:
 				if err != nil {
 					return err
 				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func parseLetterMonograms(ctx context.Context, input io.Reader,
+	language alphabet.Language, recv RecvTokenFunc) error {
+
+	rd := bufio.NewReader(input)
+
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			if err := ctx.Err(); err != nil {
+				// Inform consumer of error
+				_ = recv("", err)
+				return err
+			}
+			break loop
+		default:
+			r, _, err := rd.ReadRune()
+			if err != nil {
+				if err == io.EOF {
+					// Done reading
+					break loop
+				}
+				// Inform consumer of error
+				_ = recv("", err)
+				return err
+			}
+
+			// Ignore white space
+			if unicode.IsSpace(r) {
+				continue
+			}
+
+			r = unicode.ToLower(r)
+
+			// Ignore any runes not part of the language
+			if !language.ContainsRune(r) {
+				continue
+			}
+
+			// Inform the consumer of a new token
+			err = recv(string(r), nil)
+			if err != nil {
+				return err
 			}
 		}
 	}

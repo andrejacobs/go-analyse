@@ -108,9 +108,9 @@ func TestFrequencyAdd(t *testing.T) {
 	assert.Equal(t, expected, freq.EntriesSortedByCount())
 }
 
-// Use this to generate the test data
-// Not ideal to be doing chicken-n-egg and generating the testdata using the code
-// you actually want to test. I will just have to be 100% sure of the results
+// // Use this to generate the test data
+// // Not ideal to be doing chicken-n-egg and generating the testdata using the code
+// // you actually want to test. I will just have to be 100% sure of the results
 // func TestGenerateFrequencies(t *testing.T) {
 // 	genFn := func(input string, output string, lang alphabet.LanguageCode, tokenSize int) {
 // 		ft, err := ngrams.FrequencyTableByParsingLetters(context.Background(),
@@ -121,6 +121,11 @@ func TestFrequencyAdd(t *testing.T) {
 // 		ft.Save(out)
 // 		out.Close()
 // 	}
+
+// 	// genFn("testdata/en-control.txt", "testdata/freq-1-en-control.csv", "en", 1)
+// 	// genFn("testdata/en-control.txt", "testdata/freq-2-en-control.csv", "en", 2)
+// 	// genFn("testdata/af-control.txt", "testdata/freq-1-af-control.csv", "af", 1)
+// 	// genFn("testdata/af-control.txt", "testdata/freq-2-af-control.csv", "af", 2)
 
 // 	genFn("testdata/en-alice-partial.txt", "testdata/freq-1-en-alice.csv", "en", 1)
 // 	genFn("testdata/en-alice-partial.txt", "testdata/freq-2-en-alice.csv", "en", 2)

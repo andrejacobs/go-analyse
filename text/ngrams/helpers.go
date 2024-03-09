@@ -29,5 +29,7 @@ func FrequencyTableByParsingLetters(ctx context.Context, path string,
 	if err != nil {
 		return ft, fmt.Errorf("failed to create the frequency table from the file %q. %w", path, err)
 	}
+
+	ft.Update()
 	return ft, nil
 }

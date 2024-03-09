@@ -188,6 +188,22 @@ func (ft *FrequencyTable) Save(w io.Writer) error {
 	return nil
 }
 
+// Update will calculate and update the token frequencies
+func (ft *FrequencyTable) Update() {
+	ft.mu.Lock()
+	defer ft.mu.Unlock()
+
+	sum := 0
+	for _, freq := range ft.frequencies {
+		sum += freq.Count
+	}
+
+	for k, freq := range ft.frequencies {
+		freq.Percentage = float32(freq.Count) / float32(sum)
+		ft.frequencies[k] = freq
+	}
+}
+
 //-----------------------------------------------------------------------------
 
 // ParseLetterTokens is used to parse ngrams for letter combinations of the given tokenSize and language
@@ -207,8 +223,6 @@ func (ft *FrequencyTable) ParseLetterTokens(ctx context.Context, input io.Reader
 	}
 	return nil
 }
-
-//TODO: calculate freqs
 
 //-----------------------------------------------------------------------------
 
