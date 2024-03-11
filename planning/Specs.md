@@ -26,24 +26,35 @@ Overview of the commands that will be available.
 
 ### Core features
 
--   `cmd1`
+-   `ngrams`
 
-    -   Does A
-    -   Does B
-    -   etc.
+    -   Create either letter or word ngram frequency tables from the input corpora.
+    -   Can update existing frequency tables.
+    -   Can discover the alphabet letters used from the input corpora.
 
--   `-h, --help`
+    -   `-a, --language` The alphabet to use. This can either be a built-in (e.g. en = english) or a .csv file.
+    -   `-l, --letters` Create ngrams using letter combinations. E.g. bigrams like st, er, ae
+    -   `-w, --words` Create ngrams using word combinations. E.g. bigrams like "the cat", "he jumped"
+    -   `-s, --size` ngram size. E.g. 1 = monogram, 2 = bigrams, 3 = trigrams etc.
+    -   `-o, --out` The file path to write the results to. (csv format). See `--discover` for when this file is a language file.
+    -   `-d, --discover` Instead of creating the ngram frequency table this will discover the non whitespace characters used and write a language file to `--out` path.
+    -   `-u, --update` Load the frequency table specified by `--out` and then update as new data is parsed by the corpora.
 
-    -   Displays usage and help information.
+    -   `-h, --help`
 
--   `-v, --version`
-    -   Displays the version of the tool.
+        -   Displays usage and help information.
+
+    -   `-v, --version`
+        -   Displays the version of the tool.
 
 ### Bonus features
 
--   `cmd2`
+-   `ngrams`
 
-    -   Does A
+    -   Input files can also be tar.gz.
+    -   URLs can be specified instead of files to fetch corpora from the web. E.g. A GET request is made to the URL and then parsed.
+        -   Would then need to think about allowing netscape style cookies.txt and also setting the user-agent.
+        -   What about retries? exponential back-off.
 
 ## Module summary
 
