@@ -51,3 +51,15 @@ func TestLoadLanguagesEmpty(t *testing.T) {
 	_, err := alphabet.LoadLanguages(r)
 	assert.ErrorIs(t, err, alphabet.ErrNoLanguages)
 }
+
+func TestLanguageMapGet(t *testing.T) {
+	languages, err := alphabet.LoadLanguagesFromFile("testdata/languages.csv")
+	require.NoError(t, err)
+
+	lang, err := languages.Get("af")
+	assert.NoError(t, err)
+	assert.Equal(t, alphabet.LanguageCode("af"), lang.Code)
+
+	_, err = languages.Get("zu")
+	assert.ErrorContains(t, err, "no language found with code \"zu\"")
+}

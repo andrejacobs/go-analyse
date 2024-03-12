@@ -141,7 +141,7 @@ func TestFrequencyEntriesSortedByCount(t *testing.T) {
 // 		lang, err := alphabet.Builtin(langCode)
 // 		require.NoError(t, err)
 // 		ft, err := ngrams.FrequencyTableByParsingLetters(context.Background(),
-// 			input, lang, tokenSize)
+// 			[]string{input}, lang, tokenSize)
 // 		require.NoError(t, err)
 // 		out, err := os.Create(output)
 // 		require.NoError(t, err)

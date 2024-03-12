@@ -19,7 +19,9 @@ func main() {
 		die(err, 1)
 	}
 
-	_ = appCmd
+	if err := appCmd.Run(os.Stdout); err != nil {
+		die(err, 2)
+	}
 }
 
 func die(err error, code int) {

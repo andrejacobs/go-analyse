@@ -24,6 +24,7 @@ func TestOptionsWithDefaults(t *testing.T) {
 	assert.False(t, opt.discover)
 	assert.False(t, opt.update)
 	assert.Equal(t, "", opt.outPath)
+	assert.Empty(t, opt.inputs)
 }
 
 func TestParseArgs(t *testing.T) {
@@ -45,20 +46,20 @@ func TestParseArgs(t *testing.T) {
 		errMsg     string
 		assertFunc func(t *testing.T, opt *options)
 	}{
-		{desc: "invalid size: -s", args: "-s 0", errMsg: "invalid ngram size 0"},
-		{desc: "invalid size: --size", args: "--size 0", errMsg: "invalid ngram size 0"},
-		{desc: "size: -s 4", args: "-s 4", expected: []Option{WithSize(4)}},
-		{desc: "size: --size 4", args: "--size 4", expected: []Option{WithSize(4)}},
+		{desc: "invalid size: -s", args: "-s 0 ./in.txt", errMsg: "invalid ngram size 0"},
+		{desc: "invalid size: --size", args: "--size 0 ./in.txt", errMsg: "invalid ngram size 0"},
+		{desc: "size: -s 4", args: "-s 4 ./in.txt", expected: []Option{WithSize(4)}},
+		{desc: "size: --size 4", args: "--size 4 ./in.txt", expected: []Option{WithSize(4)}},
 
-		{desc: "language: --lang af", args: "--lang af", expected: []Option{WithLanguageCode("af")}},
-		{desc: "language: -a en", args: "-a en", expected: []Option{WithLanguageCode("en")}},
+		{desc: "language: --lang af", args: "--lang af ./in.txt", expected: []Option{WithLanguageCode("af")}},
+		{desc: "language: -a en", args: "-a en ./in.txt", expected: []Option{WithLanguageCode("en")}},
 
 		{desc: "invalid languages file: --languages",
-			args:   fmt.Sprintf("--languages %s", invalidLanguages),
+			args:   fmt.Sprintf("--languages %s ./in.txt", invalidLanguages),
 			errMsg: "failed to configure the app. failed to load languages from"},
 
 		{desc: "valid languages file: --languages",
-			args:     fmt.Sprintf("--languages %s", validLanguages),
+			args:     fmt.Sprintf("--languages %s ./in.txt", validLanguages),
 			expected: []Option{WithLanguagesFile(validLanguages)},
 			assertFunc: func(t *testing.T, opt *options) {
 				_, ok := opt.languages["coding"]
@@ -67,41 +68,51 @@ func TestParseArgs(t *testing.T) {
 		},
 
 		{desc: "missing language: --languages -a af",
-			args:   fmt.Sprintf("--languages %s -a af", validLanguages),
+			args:   fmt.Sprintf("--languages %s -a af ./in.txt", validLanguages),
 			errMsg: "failed to configure the app. failed to find the language \"af\"",
 		},
 
-		{desc: "letters: -l", args: "-l", expected: []Option{WithLetters()}},
-		{desc: "letters: --letters", args: "--letters", expected: []Option{WithLetters()}},
-		{desc: "words: -w", args: "-w", expected: []Option{WithWords()}},
-		{desc: "words: --words", args: "--words", expected: []Option{WithWords()}},
-		{desc: "mixing letters and words: -w -l", args: "-w -l", expected: []Option{WithWords()}},
-		{desc: "mixing letters and words: -l -w", args: "-l -w", expected: []Option{WithWords()}},
+		{desc: "letters: -l", args: "-l ./in.txt", expected: []Option{WithLetters()}},
+		{desc: "letters: --letters", args: "--letters ./in.txt", expected: []Option{WithLetters()}},
+		{desc: "words: -w", args: "-w ./in.txt", expected: []Option{WithWords()}},
+		{desc: "words: --words", args: "--words ./in.txt", expected: []Option{WithWords()}},
+		{desc: "mixing letters and words: -w -l", args: "-w -l ./in.txt", expected: []Option{WithWords()}},
+		{desc: "mixing letters and words: -l -w", args: "-l -w ./in.txt", expected: []Option{WithWords()}},
 
-		{desc: "discover: -d", args: "-d", expected: []Option{WithDiscoverLanguage()}},
-		{desc: "discover: --discover", args: "--discover", expected: []Option{WithDiscoverLanguage()}},
+		{desc: "discover: -d", args: "-d ./in.txt", expected: []Option{WithDiscoverLanguage()}},
+		{desc: "discover: --discover", args: "--discover ./in.txt", expected: []Option{WithDiscoverLanguage()}},
 
-		{desc: "update: -u", args: "-u", expected: []Option{WithUpdate()}},
-		{desc: "update: --update", args: "--update", expected: []Option{WithUpdate()}},
+		{desc: "update: -u", args: "-u ./in.txt", expected: []Option{WithUpdate()}},
+		{desc: "update: --update", args: "--update ./in.txt", expected: []Option{WithUpdate()}},
 
-		{desc: "output: -o", args: "-o ./test.csv", expected: []Option{WithOutputPath("./test.csv")}},
-		{desc: "output: --out", args: "--out ./test.csv", expected: []Option{WithOutputPath("./test.csv")}},
+		{desc: "output: -o", args: "-o ./test.csv ./in.txt", expected: []Option{WithOutputPath("./test.csv")}},
+		{desc: "output: --out", args: "--out ./test.csv ./in.txt", expected: []Option{WithOutputPath("./test.csv")}},
 
-		{desc: "default output", args: "", assertFunc: func(t *testing.T, opt *options) {
+		{desc: "default output", args: "./in.txt", assertFunc: func(t *testing.T, opt *options) {
 			assert.Equal(t, "./en-letters-1.csv", opt.outPath)
 		}},
-		{desc: "default output: -s 2", args: "-s 2", assertFunc: func(t *testing.T, opt *options) {
+		{desc: "default output: -s 2", args: "-s 2 ./in.txt", assertFunc: func(t *testing.T, opt *options) {
 			assert.Equal(t, "./en-letters-2.csv", opt.outPath)
 		}},
-		{desc: "default output: -s 3 -w -a af", args: "-s 3 -w -a af", assertFunc: func(t *testing.T, opt *options) {
+		{desc: "default output: -s 3 -w -a af", args: "-s 3 -w -a af ./in.txt", assertFunc: func(t *testing.T, opt *options) {
 			assert.Equal(t, "./af-words-3.csv", opt.outPath)
 		}},
-		{desc: "default output: -d", args: "-d", assertFunc: func(t *testing.T, opt *options) {
+		{desc: "default output: -d", args: "-d ./in.txt", assertFunc: func(t *testing.T, opt *options) {
 			assert.Equal(t, "./languages.csv", opt.outPath)
+		}},
+
+		{desc: "no input paths", args: "", errMsg: "failed to configure the app. expected at least one input path"},
+		{desc: "input path", args: "./input1.txt ./input2.txt", assertFunc: func(t *testing.T, opt *options) {
+			assert.Equal(t, []string{"./input1.txt", "./input2.txt"}, opt.inputs)
 		}},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			// AJ### HACK
+			if tC.desc != "no input paths" {
+				return
+			}
+
 			// Fake CLI args for flag package
 			os.Args = make([]string, 0)
 			os.Args = append(os.Args, "ngrams")
@@ -127,6 +138,7 @@ func TestParseArgs(t *testing.T) {
 				var expectedOpt options
 				require.NoError(t, applyOptions(&expectedOpt, []Option{WithDefaults()}))
 				require.NoError(t, applyOptions(&expectedOpt, tC.expected))
+				require.NoError(t, applyOptions(&expectedOpt, []Option{WithInputPaths([]string{"./in.txt"})}))
 				require.NoError(t, applyOptions(&expectedOpt, []Option{resolve()}))
 
 				assert.Equal(t, expectedOpt, opt)

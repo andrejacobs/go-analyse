@@ -1,6 +1,7 @@
 package alphabet
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -27,4 +28,13 @@ type LanguageMap map[LanguageCode]Language
 // that make up the alphabet and thus the specified rune is assumed to be a lowercase rune as well.
 func (l Language) ContainsRune(r rune) bool {
 	return strings.ContainsRune(l.Letters, r)
+}
+
+// Get the language for the given code or return an error
+func (lm LanguageMap) Get(code LanguageCode) (Language, error) {
+	lang, exists := lm[code]
+	if !exists {
+		return Language{}, fmt.Errorf("no language found with code %q", code)
+	}
+	return lang, nil
 }

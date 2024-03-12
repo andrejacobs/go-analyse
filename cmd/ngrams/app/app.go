@@ -1,14 +1,17 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/andrejacobs/go-analyse/internal/compiledinfo"
 	"github.com/andrejacobs/go-analyse/text/alphabet"
+	"github.com/andrejacobs/go-analyse/text/ngrams"
 )
 
 // App provides all the functionality for running the ngrams command line app.
@@ -26,7 +29,61 @@ func New(opts ...Option) (*App, error) {
 	result := &App{
 		opt: opt,
 	}
+
 	return result, nil
+}
+
+func (a *App) Run(out io.Writer) error {
+	if a.opt.update {
+		return fmt.Errorf("TODO: implement --update")
+	}
+
+	if a.opt.discover {
+		return fmt.Errorf("TODO: implement --discover")
+	}
+
+	lang, err := a.opt.languages.Get(a.opt.langCode)
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	var ft *ngrams.FrequencyTable
+	if a.opt.words {
+		return fmt.Errorf("TODO: implement --words")
+	} else {
+		ft, err = ngrams.FrequencyTableByParsingLetters(ctx, a.opt.inputs, lang, a.opt.tokenSize)
+		if err != nil {
+			return err
+		}
+	}
+
+	if ft != nil {
+		if err := a.saveFrequencyTable(ft); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *App) saveFrequencyTable(ft *ngrams.FrequencyTable) error {
+	//AJ### TODO: Need to do "atomic" save and replace (if using update)
+	path := a.opt.outPath
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("failed to save the frequency table to file %q. %w", path, err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to close %s. %v", path, err)
+		}
+	}()
+
+	if err := ft.Save(f); err != nil {
+		return fmt.Errorf("failed to save the frequency table to file %q. %w", path, err)
+	}
+	return nil
 }
 
 //-----------------------------------------------------------------------------
@@ -34,6 +91,7 @@ func New(opts ...Option) (*App, error) {
 
 type options struct {
 	outPath   string
+	inputs    []string
 	langCode  alphabet.LanguageCode
 	languages alphabet.LanguageMap
 	words     bool
@@ -44,8 +102,6 @@ type options struct {
 
 // Option is called to configure the options the app needs to function.
 type Option func(opt *options) error
-
-//AJ### TODO: Add a Validate func, append at the end of the options. Check that the langCode is in the map
 
 // WithDefaults return the default configuration options for the app.
 func WithDefaults() Option {
@@ -129,6 +185,22 @@ func WithOutputPath(outPath string) Option {
 	}
 }
 
+// WithInputPaths configures the app to parse the given input path files.
+func WithInputPaths(paths []string) Option {
+	inputs := make([]string, 0, len(paths))
+	for _, path := range paths {
+		path = strings.TrimSpace(path)
+		if path != "" {
+			inputs = append(inputs, path)
+		}
+	}
+
+	return func(opt *options) error {
+		opt.inputs = inputs
+		return nil
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Command line parsing
 
@@ -184,6 +256,7 @@ func ParseArgs() ([]Option, error) {
 	}
 
 	opts = append(opts, WithDefaults())
+	opts = append(opts, WithInputPaths(flag.Args()))
 	opts = append(opts, WithSize(tokenSize))
 	opts = append(opts, WithLanguageCode(alphabet.LanguageCode(langCode)))
 
@@ -229,6 +302,11 @@ func applyOptions(opt *options, opts []Option) error {
 
 func resolve() Option {
 	return func(opt *options) error {
+		// ensure at least one input path is given
+		if len(opt.inputs) < 1 {
+			return fmt.Errorf("expected at least one input path")
+		}
+
 		// validate language exists
 		if _, ok := opt.languages[opt.langCode]; !ok {
 			return fmt.Errorf("failed to find the language %q", opt.langCode)
