@@ -75,7 +75,7 @@ func writeFooter(w io.Writer) error {
 	const footer = `
 }
 
-// Language returns the built-in language for the given ISO 639 set 1 language
+// Language returns the built-in language for the given ISO 639 set 1 language.
 func Builtin(code LanguageCode) (Language, error) {
 	lang, exists := languages[code]
 	if !exists {
@@ -83,6 +83,12 @@ func Builtin(code LanguageCode) (Language, error) {
 	}
 	return lang, nil
 }
+
+// BuiltinLanguages return the built-in languages.
+func BuiltinLanguages() LanguageMap {
+	return languages
+}
+
 `
 	_, err := io.WriteString(w, footer)
 	if err != nil {

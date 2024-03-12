@@ -5,6 +5,7 @@
     -   [x] Rename the git repo and update local refs
 -   [x] Promote internal/alphabet package to text/alphabet.
 -   [x] Tokens, monogram should have specialized fast path. Do a benchmark first and after. Document it.
+-   [] Support clean shutdown. Ctrl+c, context cancel and ensure freq table is saved
 -   [] Appears the csv reader support stripping out comments, so I should use that instead (Comment rune on reader)
 -   [] Support reading from a zip/tar file
 

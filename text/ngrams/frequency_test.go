@@ -82,6 +82,7 @@ func TestFrequenciesLoadAndSave(t *testing.T) {
 
 	f, err := os.CreateTemp("", "unit-testing-ngrams")
 	require.NoError(t, err)
+	defer os.Remove(f.Name())
 
 	err = freq.Save(f)
 	f.Close()

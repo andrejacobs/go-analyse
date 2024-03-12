@@ -2,6 +2,7 @@ package alphabet
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +10,9 @@ import (
 
 	_ "golang.org/x/exp/maps"
 )
+
+// ErrNoLanguages is returned when no languages could be loaded.
+var ErrNoLanguages = errors.New("no languages")
 
 // LoadLanguages parses a set of languages from an io.Reader.
 //
@@ -43,6 +47,10 @@ func LoadLanguages(r io.Reader) (LanguageMap, error) {
 		}
 
 		result[code] = l
+	}
+
+	if len(result) < 1 {
+		return nil, ErrNoLanguages
 	}
 
 	return result, nil

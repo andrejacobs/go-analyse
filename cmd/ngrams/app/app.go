@@ -34,6 +34,7 @@ func New(opts ...Option) (*App, error) {
 
 type options struct {
 	langCode  alphabet.LanguageCode
+	languages alphabet.LanguageMap
 	words     bool
 	tokenSize int
 }
@@ -41,10 +42,13 @@ type options struct {
 // Option is called to configure the options the app needs to function.
 type Option func(opt *options) error
 
+//AJ### TODO: Add a Validate func, append at the end of the options. Check that the langCode is in the map
+
 // WithDefaults return the default configuration options for the app.
 func WithDefaults() Option {
 	return func(opt *options) error {
 		opt.langCode = "en"
+		opt.languages = alphabet.BuiltinLanguages()
 		opt.words = false
 		opt.tokenSize = 1
 		return nil
@@ -54,8 +58,19 @@ func WithDefaults() Option {
 // WithLanguageCode configures the langauge to be used.
 func WithLanguageCode(code alphabet.LanguageCode) Option {
 	return func(opt *options) error {
-		//AJ### TODO: Need to think about how I specify language files, and do validation
 		opt.langCode = code
+		return nil
+	}
+}
+
+// WithLanguagesFile will load the languages from the given file path
+func WithLanguagesFile(path string) Option {
+	return func(opt *options) error {
+		var err error
+		opt.languages, err = alphabet.LoadLanguagesFromFile(path)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 }
@@ -103,7 +118,11 @@ func ParseArgs() ([]Option, error) {
 
 	var langCode string
 	flag.StringVar(&langCode, "a", "en", "Alphabet language code. E.g. en = English")
-	flag.StringVar(&langCode, "language", "en", "Alphabet language code. E.g. en = English")
+	flag.StringVar(&langCode, "lang", "en", "Alphabet language code. E.g. en = English")
+
+	var langPath string
+	//TODO: Document the CSV format: #code,name,letters
+	flag.StringVar(&langPath, "languages", "", "Path to a languages definition file.")
 
 	var useLetters bool
 	flag.BoolVar(&useLetters, "l", true, "Create letter ngram combinations. E.g. bigrams st,er,ae,ie.")
@@ -134,6 +153,10 @@ func ParseArgs() ([]Option, error) {
 
 	if useWords {
 		opts = append(opts, WithWords())
+	}
+
+	if langPath != "" {
+		opts = append(opts, WithLanguagesFile(langPath))
 	}
 
 	return opts, nil

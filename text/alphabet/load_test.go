@@ -44,3 +44,10 @@ func TestLoadLanguagesFromFile(t *testing.T) {
 		assert.Equal(t, v, b)
 	}
 }
+
+func TestLoadLanguagesEmpty(t *testing.T) {
+	r := strings.NewReader("")
+
+	_, err := alphabet.LoadLanguages(r)
+	assert.ErrorIs(t, err, alphabet.ErrNoLanguages)
+}

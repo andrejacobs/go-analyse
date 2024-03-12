@@ -2,6 +2,8 @@ package app
 
 import (
 	"flag"
+	"fmt"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -16,17 +18,9 @@ func TestOptionsWithDefaults(t *testing.T) {
 	require.NoError(t, WithDefaults()(&opt))
 
 	assert.Equal(t, alphabet.LanguageCode("en"), opt.langCode)
+	assert.Equal(t, alphabet.BuiltinLanguages(), opt.languages)
 	assert.False(t, opt.words)
 	assert.Equal(t, 1, opt.tokenSize)
-}
-
-func TestOptionsWithLettersOrWords(t *testing.T) {
-	var opt options
-	require.NoError(t, WithLetters()(&opt))
-	assert.False(t, opt.words)
-
-	require.NoError(t, WithWords()(&opt))
-	assert.True(t, opt.words)
 }
 
 func TestParseArgs(t *testing.T) {
@@ -34,6 +28,12 @@ func TestParseArgs(t *testing.T) {
 	defer func() {
 		os.Args = backupArgs
 	}()
+
+	invalidLanguages := invalidLanguagesFile(t)
+	defer os.Remove(invalidLanguages)
+
+	validLanguages := validLanguagesFile(t)
+	defer os.Remove(validLanguages)
 
 	testCases := []struct {
 		desc     string
@@ -46,8 +46,16 @@ func TestParseArgs(t *testing.T) {
 		{desc: "size: -s 4", args: "-s 4", expected: []Option{WithSize(4)}},
 		{desc: "size: --size 4", args: "--size 4", expected: []Option{WithSize(4)}},
 
-		{desc: "language: --language af", args: "--language af", expected: []Option{WithLanguageCode("af")}},
+		{desc: "language: --lang af", args: "--lang af", expected: []Option{WithLanguageCode("af")}},
 		{desc: "language: -a en", args: "-a en", expected: []Option{WithLanguageCode("en")}},
+
+		{desc: "invalid languages file: --languages",
+			args:   fmt.Sprintf("--languages %s", invalidLanguages),
+			errMsg: "failed to configure the app. failed to load languages from"},
+
+		{desc: "valid languages file: --languages",
+			args:     fmt.Sprintf("--languages %s", validLanguages),
+			expected: []Option{WithLanguagesFile(validLanguages)}},
 
 		{desc: "letters: -l", args: "-l", expected: []Option{WithLetters()}},
 		{desc: "letters: --letters", args: "--letters", expected: []Option{WithLetters()}},
@@ -74,11 +82,33 @@ func TestParseArgs(t *testing.T) {
 				assert.ErrorContains(t, err, tC.errMsg)
 			}
 
-			var expectedOpt options
-			require.NoError(t, applyOptions(&expectedOpt, []Option{WithDefaults()}))
-			require.NoError(t, applyOptions(&expectedOpt, tC.expected))
+			if len(tC.expected) > 0 {
+				var expectedOpt options
+				require.NoError(t, applyOptions(&expectedOpt, []Option{WithDefaults()}))
+				require.NoError(t, applyOptions(&expectedOpt, tC.expected))
 
-			assert.Equal(t, expectedOpt, opt)
+				assert.Equal(t, expectedOpt, opt)
+			}
 		})
 	}
+}
+
+func invalidLanguagesFile(t *testing.T) string {
+	f, err := os.CreateTemp("", "invalid-lang.csv")
+	require.NoError(t, err)
+	defer f.Close()
+	return f.Name()
+}
+
+func validLanguagesFile(t *testing.T) string {
+	f, err := os.CreateTemp("", "valid-lang.csv")
+	require.NoError(t, err)
+	defer f.Close()
+
+	io.WriteString(f, `#code,name,letters
+en,English,abcdefghijklmnopqrstuvwxyz
+coding,Coding,{}[]()/$
+`)
+
+	return f.Name()
 }

@@ -32,7 +32,8 @@ Overview of the commands that will be available.
     -   Can update existing frequency tables.
     -   Can discover the alphabet letters used from the input corpora.
 
-    -   `-a, --language` The alphabet to use. This can either be a built-in (e.g. en = english) or a .csv file.
+    -   `-a, --lang` The alphabet to use. This can either be a built-in (e.g. en = english) or a .csv file.
+    -   `--languages` CSV file containing the languages.
     -   `-l, --letters` Create ngrams using letter combinations. E.g. bigrams like st, er, ae
     -   `-w, --words` Create ngrams using word combinations. E.g. bigrams like "the cat", "he jumped"
     -   `-s, --size` ngram size. E.g. 1 = monogram, 2 = bigrams, 3 = trigrams etc.
