@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -22,6 +23,10 @@ func main() {
 }
 
 func die(err error, code int) {
+	if errors.Is(err, app.ErrExitWithNoErr) {
+		os.Exit(0)
+	}
+
 	fmt.Fprintf(os.Stderr, "%v\n", err)
 	os.Exit(code)
 }

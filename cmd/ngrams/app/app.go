@@ -1,9 +1,13 @@
 package app
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"io"
+	"os"
 
+	"github.com/andrejacobs/go-analyse/internal/compiledinfo"
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 )
 
@@ -86,22 +90,51 @@ func WithSize(size int) Option {
 //-----------------------------------------------------------------------------
 // Command line parsing
 
+var ErrExitWithNoErr = errors.New("not an error")
+
+// ParseArgs will parse the command line arguments and create the slice of options required
+// to create the app.
 func ParseArgs() ([]Option, error) {
 	opts := make([]Option, 0, 10)
 
-	tokenSize := 0
+	var tokenSize int
 	flag.IntVar(&tokenSize, "s", 1, "Ngram size. The number of letters or words that form a single ngram.")
 	flag.IntVar(&tokenSize, "size", 1, "Ngram size. The number of letters or words that form a single ngram.")
 
-	langCode := ""
+	var langCode string
 	flag.StringVar(&langCode, "a", "en", "Alphabet language code. E.g. en = English")
 	flag.StringVar(&langCode, "language", "en", "Alphabet language code. E.g. en = English")
 
+	var useLetters bool
+	flag.BoolVar(&useLetters, "l", true, "Create letter ngram combinations. E.g. bigrams st,er,ae,ie.")
+	flag.BoolVar(&useLetters, "letters", true, "Create letter ngram combinations. E.g. bigrams st,er,ae,ie.")
+
+	var useWords bool
+	flag.BoolVar(&useWords, "w", false, "Create word ngram combinations. E.g. bigrams he jumped, she walked")
+	flag.BoolVar(&useWords, "words", false, "Create word ngram combinations. E.g. bigrams he jumped, she walked")
+
+	var showVersion bool
+	flag.BoolVar(&showVersion, "v", false, "Display version information.")
+	flag.BoolVar(&showVersion, "version", false, "Display version information.")
+
 	flag.Parse()
+
+	if showVersion {
+		printVersion(os.Stdout)
+		return nil, ErrExitWithNoErr
+	}
 
 	opts = append(opts, WithDefaults())
 	opts = append(opts, WithSize(tokenSize))
 	opts = append(opts, WithLanguageCode(alphabet.LanguageCode(langCode)))
+
+	if useLetters {
+		opts = append(opts, WithLetters())
+	}
+
+	if useWords {
+		opts = append(opts, WithWords())
+	}
 
 	return opts, nil
 }
@@ -116,4 +149,8 @@ func applyOptions(opt *options, opts []Option) error {
 		}
 	}
 	return nil
+}
+
+func printVersion(w io.Writer) {
+	io.WriteString(w, compiledinfo.UsageNameAndVersion()+"\n")
 }

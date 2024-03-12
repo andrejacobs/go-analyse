@@ -41,13 +41,20 @@ func TestParseArgs(t *testing.T) {
 		expected []Option
 		errMsg   string
 	}{
-		{desc: "invalid size -s", args: "-s 0", errMsg: "invalid ngram size 0"},
-		{desc: "invalid size --size", args: "--size 0", errMsg: "invalid ngram size 0"},
-		{desc: "size -s 4", args: "-s 4", expected: []Option{WithSize(4)}},
-		{desc: "size --size 4", args: "--size 4", expected: []Option{WithSize(4)}},
+		{desc: "invalid size: -s", args: "-s 0", errMsg: "invalid ngram size 0"},
+		{desc: "invalid size: --size", args: "--size 0", errMsg: "invalid ngram size 0"},
+		{desc: "size: -s 4", args: "-s 4", expected: []Option{WithSize(4)}},
+		{desc: "size: --size 4", args: "--size 4", expected: []Option{WithSize(4)}},
 
-		{desc: "language - af", args: "--language af", expected: []Option{WithLanguageCode("af")}},
-		{desc: "language - en", args: "-a en", expected: []Option{WithLanguageCode("en")}},
+		{desc: "language: --language af", args: "--language af", expected: []Option{WithLanguageCode("af")}},
+		{desc: "language: -a en", args: "-a en", expected: []Option{WithLanguageCode("en")}},
+
+		{desc: "letters: -l", args: "-l", expected: []Option{WithLetters()}},
+		{desc: "letters: --letters", args: "--letters", expected: []Option{WithLetters()}},
+		{desc: "words: -w", args: "-w", expected: []Option{WithWords()}},
+		{desc: "words: --words", args: "--words", expected: []Option{WithWords()}},
+		{desc: "mixing letters and words: -w -l", args: "-w -l", expected: []Option{WithWords()}},
+		{desc: "mixing letters and words: -l -w", args: "-l -w", expected: []Option{WithWords()}},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
