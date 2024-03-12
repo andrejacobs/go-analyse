@@ -1,6 +1,7 @@
 package app
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/andrejacobs/go-analyse/text/alphabet"
@@ -14,11 +15,8 @@ type App struct {
 // New creates a new [App] with the given option configuration
 func New(opts ...Option) (*App, error) {
 	var opt options
-	for _, apply := range opts {
-		err := apply(&opt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to configure the app. %w", err)
-		}
+	if err := applyOptions(&opt, opts); err != nil {
+		return nil, err
 	}
 
 	result := &App{
@@ -72,4 +70,50 @@ func WithWords() Option {
 		opt.words = true
 		return nil
 	}
+}
+
+// WithSize defines how many letters or words form a single ngram.
+func WithSize(size int) Option {
+	return func(opt *options) error {
+		if size < 1 {
+			return fmt.Errorf("invalid ngram size %d", size)
+		}
+		opt.tokenSize = size
+		return nil
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Command line parsing
+
+func ParseArgs() ([]Option, error) {
+	opts := make([]Option, 0, 10)
+
+	tokenSize := 0
+	flag.IntVar(&tokenSize, "s", 1, "Ngram size. The number of letters or words that form a single ngram.")
+	flag.IntVar(&tokenSize, "size", 1, "Ngram size. The number of letters or words that form a single ngram.")
+
+	langCode := ""
+	flag.StringVar(&langCode, "a", "en", "Alphabet language code. E.g. en = English")
+	flag.StringVar(&langCode, "language", "en", "Alphabet language code. E.g. en = English")
+
+	flag.Parse()
+
+	opts = append(opts, WithDefaults())
+	opts = append(opts, WithSize(tokenSize))
+	opts = append(opts, WithLanguageCode(alphabet.LanguageCode(langCode)))
+
+	return opts, nil
+}
+
+//-----------------------------------------------------------------------------
+
+func applyOptions(opt *options, opts []Option) error {
+	for _, apply := range opts {
+		err := apply(opt)
+		if err != nil {
+			return fmt.Errorf("failed to configure the app. %w", err)
+		}
+	}
+	return nil
 }

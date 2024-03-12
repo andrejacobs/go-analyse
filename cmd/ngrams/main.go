@@ -5,17 +5,23 @@ import (
 	"os"
 
 	"github.com/andrejacobs/go-analyse/cmd/ngrams/app"
-	"github.com/andrejacobs/go-analyse/internal/compiledinfo"
 )
 
 func main() {
-	fmt.Println("// " + compiledinfo.UsageNameAndVersion())
-
-	appCmd, err := app.New(app.WithDefaults())
+	opts, err := app.ParseArgs()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		die(err, 1)
+	}
+
+	appCmd, err := app.New(opts...)
+	if err != nil {
+		die(err, 1)
 	}
 
 	_ = appCmd
+}
+
+func die(err error, code int) {
+	fmt.Fprintf(os.Stderr, "%v\n", err)
+	os.Exit(code)
 }

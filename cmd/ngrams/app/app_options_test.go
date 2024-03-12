@@ -1,6 +1,9 @@
 package app
 
 import (
+	"flag"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/andrejacobs/go-analyse/text/alphabet"
@@ -24,4 +27,51 @@ func TestOptionsWithLettersOrWords(t *testing.T) {
 
 	require.NoError(t, WithWords()(&opt))
 	assert.True(t, opt.words)
+}
+
+func TestParseArgs(t *testing.T) {
+	backupArgs := os.Args
+	defer func() {
+		os.Args = backupArgs
+	}()
+
+	testCases := []struct {
+		desc     string
+		args     string
+		expected []Option
+		errMsg   string
+	}{
+		{desc: "invalid size -s", args: "-s 0", errMsg: "invalid ngram size 0"},
+		{desc: "invalid size --size", args: "--size 0", errMsg: "invalid ngram size 0"},
+		{desc: "size -s 4", args: "-s 4", expected: []Option{WithSize(4)}},
+		{desc: "size --size 4", args: "--size 4", expected: []Option{WithSize(4)}},
+
+		{desc: "language - af", args: "--language af", expected: []Option{WithLanguageCode("af")}},
+		{desc: "language - en", args: "-a en", expected: []Option{WithLanguageCode("en")}},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			// Fake CLI args for flag package
+			os.Args = make([]string, 0)
+			os.Args = append(os.Args, "ngrams")
+			os.Args = append(os.Args, strings.Split(tC.args, " ")...)
+
+			opts, err := ParseArgs()
+			require.NoError(t, err)
+			// Reset flag package for next test
+			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+
+			var opt options
+			err = applyOptions(&opt, opts)
+			if tC.errMsg != "" {
+				assert.ErrorContains(t, err, tC.errMsg)
+			}
+
+			var expectedOpt options
+			require.NoError(t, applyOptions(&expectedOpt, []Option{WithDefaults()}))
+			require.NoError(t, applyOptions(&expectedOpt, tC.expected))
+
+			assert.Equal(t, expectedOpt, opt)
+		})
+	}
 }
