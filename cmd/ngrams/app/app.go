@@ -48,3 +48,28 @@ func WithDefaults() Option {
 		return nil
 	}
 }
+
+// WithLanguageCode configures the langauge to be used.
+func WithLanguageCode(code alphabet.LanguageCode) Option {
+	return func(opt *options) error {
+		//AJ### TODO: Need to think about how I specify language files, and do validation
+		opt.langCode = code
+		return nil
+	}
+}
+
+// WithLetters configures the app to calculate letter combinations. E.g. bigrams st, er, ao, ie.
+func WithLetters() Option {
+	return func(opt *options) error {
+		opt.words = false
+		return nil
+	}
+}
+
+// WithWords configures the app to calculate word combinations. E.g. bigrams she walked, he jumped.
+func WithWords() Option {
+	return func(opt *options) error {
+		opt.words = true
+		return nil
+	}
+}
