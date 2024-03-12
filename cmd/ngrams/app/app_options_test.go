@@ -19,8 +19,11 @@ func TestOptionsWithDefaults(t *testing.T) {
 
 	assert.Equal(t, alphabet.LanguageCode("en"), opt.langCode)
 	assert.Equal(t, alphabet.BuiltinLanguages(), opt.languages)
-	assert.False(t, opt.words)
 	assert.Equal(t, 1, opt.tokenSize)
+	assert.False(t, opt.words)
+	assert.False(t, opt.discover)
+	assert.False(t, opt.update)
+	assert.Equal(t, "", opt.outPath)
 }
 
 func TestParseArgs(t *testing.T) {
@@ -36,10 +39,11 @@ func TestParseArgs(t *testing.T) {
 	defer os.Remove(validLanguages)
 
 	testCases := []struct {
-		desc     string
-		args     string
-		expected []Option
-		errMsg   string
+		desc       string
+		args       string
+		expected   []Option
+		errMsg     string
+		assertFunc func(t *testing.T, opt *options)
 	}{
 		{desc: "invalid size: -s", args: "-s 0", errMsg: "invalid ngram size 0"},
 		{desc: "invalid size: --size", args: "--size 0", errMsg: "invalid ngram size 0"},
@@ -55,7 +59,17 @@ func TestParseArgs(t *testing.T) {
 
 		{desc: "valid languages file: --languages",
 			args:     fmt.Sprintf("--languages %s", validLanguages),
-			expected: []Option{WithLanguagesFile(validLanguages)}},
+			expected: []Option{WithLanguagesFile(validLanguages)},
+			assertFunc: func(t *testing.T, opt *options) {
+				_, ok := opt.languages["coding"]
+				assert.True(t, ok)
+			},
+		},
+
+		{desc: "missing language: --languages -a af",
+			args:   fmt.Sprintf("--languages %s -a af", validLanguages),
+			errMsg: "failed to configure the app. failed to find the language \"af\"",
+		},
 
 		{desc: "letters: -l", args: "-l", expected: []Option{WithLetters()}},
 		{desc: "letters: --letters", args: "--letters", expected: []Option{WithLetters()}},
@@ -63,6 +77,28 @@ func TestParseArgs(t *testing.T) {
 		{desc: "words: --words", args: "--words", expected: []Option{WithWords()}},
 		{desc: "mixing letters and words: -w -l", args: "-w -l", expected: []Option{WithWords()}},
 		{desc: "mixing letters and words: -l -w", args: "-l -w", expected: []Option{WithWords()}},
+
+		{desc: "discover: -d", args: "-d", expected: []Option{WithDiscoverLanguage()}},
+		{desc: "discover: --discover", args: "--discover", expected: []Option{WithDiscoverLanguage()}},
+
+		{desc: "update: -u", args: "-u", expected: []Option{WithUpdate()}},
+		{desc: "update: --update", args: "--update", expected: []Option{WithUpdate()}},
+
+		{desc: "output: -o", args: "-o ./test.csv", expected: []Option{WithOutputPath("./test.csv")}},
+		{desc: "output: --out", args: "--out ./test.csv", expected: []Option{WithOutputPath("./test.csv")}},
+
+		{desc: "default output", args: "", assertFunc: func(t *testing.T, opt *options) {
+			assert.Equal(t, "./en-letters-1.csv", opt.outPath)
+		}},
+		{desc: "default output: -s 2", args: "-s 2", assertFunc: func(t *testing.T, opt *options) {
+			assert.Equal(t, "./en-letters-2.csv", opt.outPath)
+		}},
+		{desc: "default output: -s 3 -w -a af", args: "-s 3 -w -a af", assertFunc: func(t *testing.T, opt *options) {
+			assert.Equal(t, "./af-words-3.csv", opt.outPath)
+		}},
+		{desc: "default output: -d", args: "-d", assertFunc: func(t *testing.T, opt *options) {
+			assert.Equal(t, "./languages.csv", opt.outPath)
+		}},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
@@ -71,23 +107,34 @@ func TestParseArgs(t *testing.T) {
 			os.Args = append(os.Args, "ngrams")
 			os.Args = append(os.Args, strings.Split(tC.args, " ")...)
 
+			// Parse the args
 			opts, err := ParseArgs()
 			require.NoError(t, err)
 			// Reset flag package for next test
 			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
+			// Apply the options (as the app would)
 			var opt options
 			err = applyOptions(&opt, opts)
+
+			// Check for expected error
 			if tC.errMsg != "" {
 				assert.ErrorContains(t, err, tC.errMsg)
 			}
 
+			// Check for expected options to be applied
 			if len(tC.expected) > 0 {
 				var expectedOpt options
 				require.NoError(t, applyOptions(&expectedOpt, []Option{WithDefaults()}))
 				require.NoError(t, applyOptions(&expectedOpt, tC.expected))
+				require.NoError(t, applyOptions(&expectedOpt, []Option{resolve()}))
 
 				assert.Equal(t, expectedOpt, opt)
+			}
+
+			// Perform custom assert checks
+			if tC.assertFunc != nil {
+				tC.assertFunc(t, &opt)
 			}
 		})
 	}

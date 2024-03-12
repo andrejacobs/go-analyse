@@ -8,5 +8,7 @@
 -   [] Support clean shutdown. Ctrl+c, context cancel and ensure freq table is saved
 -   [] Appears the csv reader support stripping out comments, so I should use that instead (Comment rune on reader)
 -   [] Support reading from a zip/tar file
+-   [] Document all the possible ways of using the CLI args E.g -o, --out, -out, --o, -o=something.
+-   [] Document the default output path name resolving.
 
 ## Done

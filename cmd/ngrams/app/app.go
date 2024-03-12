@@ -33,10 +33,13 @@ func New(opts ...Option) (*App, error) {
 // Functional options pattern
 
 type options struct {
+	outPath   string
 	langCode  alphabet.LanguageCode
 	languages alphabet.LanguageMap
 	words     bool
 	tokenSize int
+	discover  bool
+	update    bool
 }
 
 // Option is called to configure the options the app needs to function.
@@ -102,6 +105,30 @@ func WithSize(size int) Option {
 	}
 }
 
+// WithDiscoverLanguage configures the app to discover the non-whitespace characters being used.
+func WithDiscoverLanguage() Option {
+	return func(opt *options) error {
+		opt.discover = true
+		return nil
+	}
+}
+
+// WithUpdate configures the app to update an existing ngram output.
+func WithUpdate() Option {
+	return func(opt *options) error {
+		opt.update = true
+		return nil
+	}
+}
+
+// WithOutputPath configures the app to store the ngram output to the given path.
+func WithOutputPath(outPath string) Option {
+	return func(opt *options) error {
+		opt.outPath = outPath
+		return nil
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Command line parsing
 
@@ -111,6 +138,11 @@ var ErrExitWithNoErr = errors.New("not an error")
 // to create the app.
 func ParseArgs() ([]Option, error) {
 	opts := make([]Option, 0, 10)
+
+	var outPath string
+	//TODO: Document that this depends on --discover and --update
+	flag.StringVar(&outPath, "o", "", "Path to where the output will be stored.")
+	flag.StringVar(&outPath, "out", "", "Path to where the output will be stored.")
 
 	var tokenSize int
 	flag.IntVar(&tokenSize, "s", 1, "Ngram size. The number of letters or words that form a single ngram.")
@@ -132,6 +164,14 @@ func ParseArgs() ([]Option, error) {
 	flag.BoolVar(&useWords, "w", false, "Create word ngram combinations. E.g. bigrams he jumped, she walked")
 	flag.BoolVar(&useWords, "words", false, "Create word ngram combinations. E.g. bigrams he jumped, she walked")
 
+	var discover bool
+	flag.BoolVar(&discover, "d", false, "Discover the non-whitespace letters used and write a languages file to the out path.")
+	flag.BoolVar(&discover, "discover", false, "Discover the non-whitespace letters used and write a languages file to the out path.")
+
+	var update bool
+	flag.BoolVar(&update, "u", false, "Update the existing ngram output file.")
+	flag.BoolVar(&update, "update", false, "Update the existing ngram output file.")
+
 	var showVersion bool
 	flag.BoolVar(&showVersion, "v", false, "Display version information.")
 	flag.BoolVar(&showVersion, "version", false, "Display version information.")
@@ -147,6 +187,14 @@ func ParseArgs() ([]Option, error) {
 	opts = append(opts, WithSize(tokenSize))
 	opts = append(opts, WithLanguageCode(alphabet.LanguageCode(langCode)))
 
+	if outPath != "" {
+		opts = append(opts, WithOutputPath(outPath))
+	}
+
+	if langPath != "" {
+		opts = append(opts, WithLanguagesFile(langPath))
+	}
+
 	if useLetters {
 		opts = append(opts, WithLetters())
 	}
@@ -155,10 +203,15 @@ func ParseArgs() ([]Option, error) {
 		opts = append(opts, WithWords())
 	}
 
-	if langPath != "" {
-		opts = append(opts, WithLanguagesFile(langPath))
+	if discover {
+		opts = append(opts, WithDiscoverLanguage())
 	}
 
+	if update {
+		opts = append(opts, WithUpdate())
+	}
+
+	opts = append(opts, resolve())
 	return opts, nil
 }
 
@@ -172,6 +225,32 @@ func applyOptions(opt *options, opts []Option) error {
 		}
 	}
 	return nil
+}
+
+func resolve() Option {
+	return func(opt *options) error {
+		// validate language exists
+		if _, ok := opt.languages[opt.langCode]; !ok {
+			return fmt.Errorf("failed to find the language %q", opt.langCode)
+		}
+
+		// default output path
+		if opt.outPath == "" {
+			if opt.discover {
+				opt.outPath = "./languages.csv"
+			} else {
+				var ngramType string
+				if opt.words {
+					ngramType = "words"
+				} else {
+					ngramType = "letters"
+				}
+				opt.outPath = fmt.Sprintf("./%s-%s-%d.csv", opt.langCode, ngramType, opt.tokenSize)
+			}
+		}
+
+		return nil
+	}
 }
 
 func printVersion(w io.Writer) {
