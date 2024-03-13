@@ -108,11 +108,6 @@ func TestParseArgs(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			// AJ### HACK
-			if tC.desc != "no input paths" {
-				return
-			}
-
 			// Fake CLI args for flag package
 			os.Args = make([]string, 0)
 			os.Args = append(os.Args, "ngrams")
