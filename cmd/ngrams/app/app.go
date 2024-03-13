@@ -14,26 +14,49 @@ import (
 	"github.com/andrejacobs/go-analyse/text/ngrams"
 )
 
-// App provides all the functionality for running the ngrams command line app.
-type App struct {
+// Main parses the command line arguments and runs the app.
+// Decoupled for unit-testing.
+func Main(out io.Writer, errOut io.Writer) error {
+	opts, err := parseArgs()
+	if err != nil {
+		fmt.Fprintf(errOut, "%v\n", err)
+		return err
+	}
+
+	a, err := newApp(opts...)
+	if err != nil {
+		fmt.Fprintf(errOut, "%v\n", err)
+		return err
+	}
+
+	if err := a.run(out, errOut); err != nil {
+		fmt.Fprintf(errOut, "%v\n", err)
+		return err
+	}
+
+	return nil
+}
+
+// application provides all the functionality for running the ngrams command line app.
+type application struct {
 	opt options
 }
 
-// New creates a new [App] with the given option configuration
-func New(opts ...Option) (*App, error) {
+// newApp creates a new [application] with the given option configuration
+func newApp(opts ...optionFunc) (*application, error) {
 	var opt options
 	if err := applyOptions(&opt, opts); err != nil {
 		return nil, err
 	}
 
-	result := &App{
+	result := &application{
 		opt: opt,
 	}
 
 	return result, nil
 }
 
-func (a *App) Run(out io.Writer) error {
+func (a *application) run(out io.Writer, errOut io.Writer) error {
 	if a.opt.update {
 		return fmt.Errorf("TODO: implement --update")
 	}
@@ -67,7 +90,7 @@ func (a *App) Run(out io.Writer) error {
 	return nil
 }
 
-func (a *App) saveFrequencyTable(ft *ngrams.FrequencyTable) error {
+func (a *application) saveFrequencyTable(ft *ngrams.FrequencyTable) error {
 	//AJ### TODO: Need to do "atomic" save and replace (if using update)
 	path := a.opt.outPath
 	f, err := os.Create(path)
@@ -100,11 +123,11 @@ type options struct {
 	update    bool
 }
 
-// Option is called to configure the options the app needs to function.
-type Option func(opt *options) error
+// optionFunc is called to configure the options the app needs to function.
+type optionFunc func(opt *options) error
 
-// WithDefaults return the default configuration options for the app.
-func WithDefaults() Option {
+// withDefaults return the default configuration options for the app.
+func withDefaults() optionFunc {
 	return func(opt *options) error {
 		opt.langCode = "en"
 		opt.languages = alphabet.BuiltinLanguages()
@@ -114,16 +137,16 @@ func WithDefaults() Option {
 	}
 }
 
-// WithLanguageCode configures the langauge to be used.
-func WithLanguageCode(code alphabet.LanguageCode) Option {
+// withLanguageCode configures the langauge to be used.
+func withLanguageCode(code alphabet.LanguageCode) optionFunc {
 	return func(opt *options) error {
 		opt.langCode = code
 		return nil
 	}
 }
 
-// WithLanguagesFile will load the languages from the given file path
-func WithLanguagesFile(path string) Option {
+// withLanguagesFile will load the languages from the given file path
+func withLanguagesFile(path string) optionFunc {
 	return func(opt *options) error {
 		var err error
 		opt.languages, err = alphabet.LoadLanguagesFromFile(path)
@@ -134,24 +157,24 @@ func WithLanguagesFile(path string) Option {
 	}
 }
 
-// WithLetters configures the app to calculate letter combinations. E.g. bigrams st, er, ao, ie.
-func WithLetters() Option {
+// withLetters configures the app to calculate letter combinations. E.g. bigrams st, er, ao, ie.
+func withLetters() optionFunc {
 	return func(opt *options) error {
 		opt.words = false
 		return nil
 	}
 }
 
-// WithWords configures the app to calculate word combinations. E.g. bigrams she walked, he jumped.
-func WithWords() Option {
+// withWords configures the app to calculate word combinations. E.g. bigrams she walked, he jumped.
+func withWords() optionFunc {
 	return func(opt *options) error {
 		opt.words = true
 		return nil
 	}
 }
 
-// WithSize defines how many letters or words form a single ngram.
-func WithSize(size int) Option {
+// withSize defines how many letters or words form a single ngram.
+func withSize(size int) optionFunc {
 	return func(opt *options) error {
 		if size < 1 {
 			return fmt.Errorf("invalid ngram size %d", size)
@@ -161,32 +184,32 @@ func WithSize(size int) Option {
 	}
 }
 
-// WithDiscoverLanguage configures the app to discover the non-whitespace characters being used.
-func WithDiscoverLanguage() Option {
+// withDiscoverLanguage configures the app to discover the non-whitespace characters being used.
+func withDiscoverLanguage() optionFunc {
 	return func(opt *options) error {
 		opt.discover = true
 		return nil
 	}
 }
 
-// WithUpdate configures the app to update an existing ngram output.
-func WithUpdate() Option {
+// withUpdate configures the app to update an existing ngram output.
+func withUpdate() optionFunc {
 	return func(opt *options) error {
 		opt.update = true
 		return nil
 	}
 }
 
-// WithOutputPath configures the app to store the ngram output to the given path.
-func WithOutputPath(outPath string) Option {
+// withOutputPath configures the app to store the ngram output to the given path.
+func withOutputPath(outPath string) optionFunc {
 	return func(opt *options) error {
 		opt.outPath = outPath
 		return nil
 	}
 }
 
-// WithInputPaths configures the app to parse the given input path files.
-func WithInputPaths(paths []string) Option {
+// withInputPaths configures the app to parse the given input path files.
+func withInputPaths(paths []string) optionFunc {
 	inputs := make([]string, 0, len(paths))
 	for _, path := range paths {
 		path = strings.TrimSpace(path)
@@ -206,10 +229,10 @@ func WithInputPaths(paths []string) Option {
 
 var ErrExitWithNoErr = errors.New("not an error")
 
-// ParseArgs will parse the command line arguments and create the slice of options required
+// parseArgs will parse the command line arguments and create the slice of options required
 // to create the app.
-func ParseArgs() ([]Option, error) {
-	opts := make([]Option, 0, 10)
+func parseArgs() ([]optionFunc, error) {
+	opts := make([]optionFunc, 0, 10)
 
 	var outPath string
 	//TODO: Document that this depends on --discover and --update
@@ -255,33 +278,33 @@ func ParseArgs() ([]Option, error) {
 		return nil, ErrExitWithNoErr
 	}
 
-	opts = append(opts, WithDefaults())
-	opts = append(opts, WithInputPaths(flag.Args()))
-	opts = append(opts, WithSize(tokenSize))
-	opts = append(opts, WithLanguageCode(alphabet.LanguageCode(langCode)))
+	opts = append(opts, withDefaults())
+	opts = append(opts, withInputPaths(flag.Args()))
+	opts = append(opts, withSize(tokenSize))
+	opts = append(opts, withLanguageCode(alphabet.LanguageCode(langCode)))
 
 	if outPath != "" {
-		opts = append(opts, WithOutputPath(outPath))
+		opts = append(opts, withOutputPath(outPath))
 	}
 
 	if langPath != "" {
-		opts = append(opts, WithLanguagesFile(langPath))
+		opts = append(opts, withLanguagesFile(langPath))
 	}
 
 	if useLetters {
-		opts = append(opts, WithLetters())
+		opts = append(opts, withLetters())
 	}
 
 	if useWords {
-		opts = append(opts, WithWords())
+		opts = append(opts, withWords())
 	}
 
 	if discover {
-		opts = append(opts, WithDiscoverLanguage())
+		opts = append(opts, withDiscoverLanguage())
 	}
 
 	if update {
-		opts = append(opts, WithUpdate())
+		opts = append(opts, withUpdate())
 	}
 
 	opts = append(opts, resolve())
@@ -290,7 +313,7 @@ func ParseArgs() ([]Option, error) {
 
 //-----------------------------------------------------------------------------
 
-func applyOptions(opt *options, opts []Option) error {
+func applyOptions(opt *options, opts []optionFunc) error {
 	for _, apply := range opts {
 		err := apply(opt)
 		if err != nil {
@@ -300,7 +323,7 @@ func applyOptions(opt *options, opts []Option) error {
 	return nil
 }
 
-func resolve() Option {
+func resolve() optionFunc {
 	return func(opt *options) error {
 		// ensure at least one input path is given
 		if len(opt.inputs) < 1 {
