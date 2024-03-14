@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/andrejacobs/go-analyse/cmd/ngrams/app"
+	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/andrejacobs/go-analyse/text/ngrams"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,7 +29,7 @@ func TestApp(t *testing.T) {
 	validLanguages := validLanguagesFile(t)
 	defer os.Remove(validLanguages)
 
-	outPath := tempOutputPath(t)
+	outPath := tempOutputPath()
 	defer os.Remove(outPath)
 
 	testCases := []struct {
@@ -141,6 +142,20 @@ func TestApp(t *testing.T) {
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputFRAlice3)
 		}},
+
+		{desc: "discover fr", args: fmt.Sprintf("-d -o %s %s", outPath, inputFRAlice), testFunc: func(t *testing.T) {
+			_, stdErr, err := runMain()
+			assert.NoError(t, err)
+			assert.Empty(t, stdErr)
+
+			langs, err := alphabet.LoadLanguagesFromFile(outPath)
+			require.NoError(t, err)
+			lang, err := langs.Get("unknown")
+			require.NoError(t, err)
+			assert.Equal(t, "unknown", lang.Name)
+
+			assert.ElementsMatch(t, []rune(`!"'()*,-.:;?[]_abcdefghijlmnopqrstuvxyzàâçèéêîôùûœ`), []rune(lang.Letters))
+		}},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
@@ -184,7 +199,9 @@ coding,Coding,{}[]()/$
 	return f.Name()
 }
 
-func tempOutputPath(t *testing.T) string {
+func tempOutputPath() string {
+	// //AJ### DEBUG
+	// return filepath.Join("/Users/andre/temp", "ngrams-unit-testing-out.csv")
 	return filepath.Join(os.TempDir(), "ngrams-unit-testing-out.csv")
 }
 

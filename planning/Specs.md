@@ -48,6 +48,12 @@ Overview of the commands that will be available.
     -   `-v, --version`
         -   Displays the version of the tool.
 
+What options work with what?
+
+-   `-a, --lang`, `--languages`, `-l, -w`, `-s` works with creating the ngram frequency table. Depends on the `-o` and inputs paths.
+-   `-u, --update` works with the first set, it first reads the `-o` file and then proceeds to update the frequency table before writing back to `-o`
+-   `-d, --discover` works only with the input paths and writes the language file to `-o`.
+
 ### Bonus features
 
 -   `ngrams`
@@ -56,6 +62,7 @@ Overview of the commands that will be available.
     -   URLs can be specified instead of files to fetch corpora from the web. E.g. A GET request is made to the URL and then parsed.
         -   Would then need to think about allowing netscape style cookies.txt and also setting the user-agent.
         -   What about retries? exponential back-off.
+    -   Progress bar `--progress`
 
 ## Module summary
 

@@ -65,7 +65,7 @@ func LoadLanguagesFromFile(path string) (LanguageMap, error) {
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to close %q. %v", path, err)
+			fmt.Fprintf(os.Stderr, "ERROR: failed to close %q. %v", path, err)
 		}
 	}()
 

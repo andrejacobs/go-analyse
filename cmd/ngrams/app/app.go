@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/andrejacobs/go-analyse/internal/compiledinfo"
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/andrejacobs/go-analyse/text/ngrams"
+	"github.com/andrejacobs/go-collection/collection"
 )
 
 // Main parses the command line arguments and runs the app.
@@ -19,18 +21,18 @@ import (
 func Main(out io.Writer, errOut io.Writer) error {
 	opts, err := parseArgs()
 	if err != nil {
-		fmt.Fprintf(errOut, "%v\n", err)
+		fmt.Fprintf(errOut, "ERROR: %v\n", err)
 		return err
 	}
 
 	a, err := newApp(opts...)
 	if err != nil {
-		fmt.Fprintf(errOut, "%v\n", err)
+		fmt.Fprintf(errOut, "ERROR: %v\n", err)
 		return err
 	}
 
 	if err := a.run(out, errOut); err != nil {
-		fmt.Fprintf(errOut, "%v\n", err)
+		fmt.Fprintf(errOut, "ERROR: %v\n", err)
 		return err
 	}
 
@@ -57,12 +59,18 @@ func newApp(opts ...optionFunc) (*application, error) {
 }
 
 func (a *application) run(out io.Writer, errOut io.Writer) error {
-	if a.opt.update {
-		return fmt.Errorf("TODO: implement --update")
-	}
+	ctx := context.Background()
 
 	if a.opt.discover {
-		return fmt.Errorf("TODO: implement --discover")
+		return a.discoverLetters(ctx, out, errOut)
+	}
+
+	return a.generateNgrams(ctx, out, errOut)
+}
+
+func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut io.Writer) error {
+	if a.opt.update {
+		return fmt.Errorf("TODO: implement --update")
 	}
 
 	lang, err := a.opt.languages.Get(a.opt.langCode)
@@ -70,7 +78,6 @@ func (a *application) run(out io.Writer, errOut io.Writer) error {
 		return err
 	}
 
-	ctx := context.Background()
 	var ft *ngrams.FrequencyTable
 	if a.opt.words {
 		return fmt.Errorf("TODO: implement --words")
@@ -90,6 +97,44 @@ func (a *application) run(out io.Writer, errOut io.Writer) error {
 	return nil
 }
 
+func (a *application) discoverLetters(ctx context.Context, out io.Writer, errOut io.Writer) error {
+	f, err := os.Create(a.opt.outPath)
+	if err != nil {
+		return fmt.Errorf("failed to create the languages file %q. %w", a.opt.outPath, err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: %s\n", err)
+		}
+	}()
+
+	result := collection.NewSet[rune]()
+
+	for _, path := range a.opt.inputs {
+		runes, err := alphabet.DiscoverLettersFromFile(ctx, path)
+		if err != nil {
+			return fmt.Errorf("failed to discover the letters from %q. %w", path, err)
+		}
+		result.InsertSlice(runes)
+	}
+
+	_, err = io.WriteString(f, "#code,name,letters\n")
+	if err != nil {
+		return fmt.Errorf("failed to write csv header to %q. %w", a.opt.outPath, err)
+	}
+
+	runes := result.Items()
+	slices.Sort(runes)
+	letters := strings.ReplaceAll(string(runes), `"`, `""`)
+
+	_, err = io.WriteString(f, `unknown,unknown,"`+letters+`"`)
+	if err != nil {
+		return fmt.Errorf("failed to write csv header to %q. %w", a.opt.outPath, err)
+	}
+
+	return nil
+}
+
 func (a *application) saveFrequencyTable(ft *ngrams.FrequencyTable) error {
 	//AJ### TODO: Need to do "atomic" save and replace (if using update)
 	path := a.opt.outPath
@@ -99,7 +144,7 @@ func (a *application) saveFrequencyTable(ft *ngrams.FrequencyTable) error {
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to close %s. %v", path, err)
+			fmt.Fprintf(os.Stderr, "ERROR: failed to close %s. %v", path, err)
 		}
 	}()
 

@@ -81,7 +81,7 @@ func LoadFrequenciesFromFile(path string) (*FrequencyTable, error) {
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to close %s. %v", path, err)
+			fmt.Fprintf(os.Stderr, "ERROR: failed to close %s. %v", path, err)
 		}
 	}()
 
