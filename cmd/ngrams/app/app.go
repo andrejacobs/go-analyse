@@ -80,7 +80,10 @@ func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut 
 
 	var ft *ngrams.FrequencyTable
 	if a.opt.words {
-		return fmt.Errorf("TODO: implement --words")
+		ft, err = ngrams.FrequencyTableByParsingWords(ctx, a.opt.inputs, lang, a.opt.tokenSize)
+		if err != nil {
+			return err
+		}
 	} else {
 		ft, err = ngrams.FrequencyTableByParsingLetters(ctx, a.opt.inputs, lang, a.opt.tokenSize)
 		if err != nil {

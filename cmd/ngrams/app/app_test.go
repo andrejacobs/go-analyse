@@ -87,6 +87,8 @@ func TestApp(t *testing.T) {
 		//------------------------
 		// Happy paths
 
+		// Letters
+
 		{desc: "monograms en-control", args: fmt.Sprintf("-s 1 -o %s %s", outPath, inputENControl), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
 			assert.NoError(t, err)
@@ -142,6 +144,45 @@ func TestApp(t *testing.T) {
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputFRAlice3)
 		}},
+
+		// Words
+
+		{desc: "word monograms af-control", args: fmt.Sprintf("-w -a af -s 2 -o %s %s", outPath, inputAFControl), testFunc: func(t *testing.T) {
+			_, stdErr, err := runMain()
+			assert.NoError(t, err)
+			assert.Empty(t, stdErr)
+			compareTwoFrequencyTableFiles(t, outPath, outputAFControlW2)
+		}},
+
+		{desc: "word bigrams en-alice-partial", args: fmt.Sprintf("-w -s 2 -o %s %s", outPath, inputENAlice), testFunc: func(t *testing.T) {
+			_, stdErr, err := runMain()
+			assert.NoError(t, err)
+			assert.Empty(t, stdErr)
+			compareTwoFrequencyTableFiles(t, outPath, outputENAliceW2)
+		}},
+
+		{desc: "word trigrams en-alice-partial", args: fmt.Sprintf("-w -s 3 -o %s %s", outPath, inputENAlice), testFunc: func(t *testing.T) {
+			_, stdErr, err := runMain()
+			assert.NoError(t, err)
+			assert.Empty(t, stdErr)
+			compareTwoFrequencyTableFiles(t, outPath, outputENAliceW3)
+		}},
+
+		{desc: "word bigrams fr-alice-partial", args: fmt.Sprintf("-w -a fr -s 2 -o %s %s", outPath, inputFRAlice), testFunc: func(t *testing.T) {
+			_, stdErr, err := runMain()
+			assert.NoError(t, err)
+			assert.Empty(t, stdErr)
+			compareTwoFrequencyTableFiles(t, outPath, outputFRAliceW2)
+		}},
+
+		{desc: "word trigrams fr-alice-partial", args: fmt.Sprintf("-w -a fr -s 3 -o %s %s", outPath, inputFRAlice), testFunc: func(t *testing.T) {
+			_, stdErr, err := runMain()
+			assert.NoError(t, err)
+			assert.Empty(t, stdErr)
+			compareTwoFrequencyTableFiles(t, outPath, outputFRAliceW3)
+		}},
+
+		// Discover
 
 		{desc: "discover fr", args: fmt.Sprintf("-d -o %s %s", outPath, inputFRAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
@@ -227,19 +268,30 @@ func compareTwoFrequencyTableFiles(t *testing.T, a string, b string) {
 const (
 	ngramTestData = "../../../text/ngrams/testdata/"
 
-	inputENControl   = ngramTestData + "en-control.txt"
+	inputENControl = ngramTestData + "en-control.txt"
+	inputAFControl = ngramTestData + "af-control.txt"
+	inputENAlice   = ngramTestData + "en-alice-partial.txt"
+	inputFRAlice   = ngramTestData + "fr-alice-partial.txt"
+
+	// Letters
 	outputENControl1 = ngramTestData + "freq-1-en-control.csv"
 	outputENControl2 = ngramTestData + "freq-2-en-control.csv"
 
-	inputAFControl   = ngramTestData + "af-control.txt"
 	outputAFControl1 = ngramTestData + "freq-1-af-control.csv"
 	outputAFControl2 = ngramTestData + "freq-2-af-control.csv"
 
-	inputENAlice   = ngramTestData + "en-alice-partial.txt"
 	outputENAlice2 = ngramTestData + "freq-2-en-alice.csv"
 	outputENAlice3 = ngramTestData + "freq-3-en-alice.csv"
 
-	inputFRAlice   = ngramTestData + "fr-alice-partial.txt"
 	outputFRAlice2 = ngramTestData + "freq-2-fr-alice.csv"
 	outputFRAlice3 = ngramTestData + "freq-3-fr-alice.csv"
+
+	// Words
+	outputAFControlW2 = ngramTestData + "freq-2w-af-control.csv"
+
+	outputENAliceW2 = ngramTestData + "freq-2w-en-alice.csv"
+	outputENAliceW3 = ngramTestData + "freq-3w-en-alice.csv"
+
+	outputFRAliceW2 = ngramTestData + "freq-2w-fr-alice.csv"
+	outputFRAliceW3 = ngramTestData + "freq-3w-fr-alice.csv"
 )
