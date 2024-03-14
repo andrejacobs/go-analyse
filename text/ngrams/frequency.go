@@ -172,19 +172,24 @@ func (ft *FrequencyTable) Add(token string, count int) {
 
 // Save the frequency table to the io.Writer in the same CSV format used by the Load functions.
 func (ft *FrequencyTable) Save(w io.Writer) error {
-	_, err := io.WriteString(w, "#token,count,percentage\n")
+	csvW := csv.NewWriter(w)
+	err := csvW.Write([]string{"#token", "count", "percentage"})
 	if err != nil {
 		return fmt.Errorf("failed to write the csv header. %w", err)
 	}
 
 	freqs := ft.EntriesSortedByCount()
 	for _, freq := range freqs {
-		_, err := fmt.Fprintf(w, "%s,%d,%f\n", freq.Token, freq.Count, freq.Percentage)
+		err := csvW.Write([]string{freq.Token, strconv.Itoa(freq.Count), strconv.FormatFloat(float64(freq.Percentage), 'f', 8, 32)})
 		if err != nil {
 			return fmt.Errorf("failed to write the token %q. %w", freq.Token, err)
 		}
 	}
 
+	csvW.Flush()
+	if err := csvW.Error(); err != nil {
+		return fmt.Errorf("failed to write the frequency table. %w", err)
+	}
 	return nil
 }
 
@@ -220,6 +225,24 @@ func (ft *FrequencyTable) ParseLetterTokens(ctx context.Context, input io.Reader
 		})
 	if err != nil {
 		return fmt.Errorf("failed to parse the letter tokens. %w", err)
+	}
+	return nil
+}
+
+// ParseWordTokens is used to parse ngrams for word combinations of the given tokenSize and language
+// from the io.Reader and then update the frequency table.
+func (ft *FrequencyTable) ParseWordTokens(ctx context.Context, input io.Reader, language alphabet.Language,
+	tokenSize int) error {
+
+	err := ParseWordTokens(ctx, input, language, tokenSize,
+		func(token string, err error) error {
+			if err == nil {
+				ft.Add(token, 1)
+			}
+			return nil
+		})
+	if err != nil {
+		return fmt.Errorf("failed to parse the word tokens. %w", err)
 	}
 	return nil
 }

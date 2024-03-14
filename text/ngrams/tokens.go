@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"io"
+	"strings"
 	"unicode"
 
 	"github.com/andrejacobs/go-analyse/text/alphabet"
@@ -24,6 +25,12 @@ func ParseLetterTokens(ctx context.Context, input io.Reader, language alphabet.L
 	}
 
 	return parseLetterNgrams(ctx, input, language, tokenSize, recv)
+}
+
+// ParseWordTokens is used to parse ngrams for word combinations of the given tokenSize and language from the io.Reader.
+func ParseWordTokens(ctx context.Context, input io.Reader, language alphabet.Language,
+	tokenSize int, recv RecvTokenFunc) error {
+	return parseWordNgrams(ctx, input, language, tokenSize, recv)
 }
 
 func parseLetterNgrams(ctx context.Context, input io.Reader, language alphabet.Language,
@@ -137,6 +144,62 @@ loop:
 			err = recv(string(r), nil)
 			if err != nil {
 				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func parseWordNgrams(ctx context.Context, input io.Reader, language alphabet.Language,
+	tokenSize int, recv RecvTokenFunc) error {
+
+	buf := make([]string, tokenSize)
+	pos := 0
+	count := 0
+
+	scanner := bufio.NewScanner(bufio.NewReader(input))
+	scanner.Split(bufio.ScanWords)
+
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			if err := ctx.Err(); err != nil {
+				// Inform consumer of error
+				_ = recv("", err)
+				return err
+			}
+			break loop
+		default:
+			if !scanner.Scan() {
+				if err := scanner.Err(); err != nil {
+					// Inform consumer of error
+					_ = recv("", err)
+					return err
+				}
+				break loop
+			}
+
+			word := strings.ToLower(scanner.Text())
+
+			buf[pos+count] = word
+			count++
+
+			// Did we parse enough words for a full token?
+			if count == tokenSize {
+				words := buf[pos:]
+				token := strings.Join(words, " ")
+
+				copy(buf[pos:], buf[pos+1:])
+				pos = 0
+				count = tokenSize - 1
+
+				// Inform the consumer of a new token
+				err := recv(token, nil)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

@@ -10,5 +10,6 @@
 -   [] Support reading from a zip/tar file
 -   [] Document all the possible ways of using the CLI args E.g -o, --out, -out, --o, -o=something.
 -   [] Document the default output path name resolving.
+-   [] Document that the Word ngrams doesn't rip out punctionation
 
 ## Done
