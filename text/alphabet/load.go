@@ -61,11 +61,11 @@ func LoadLanguages(r io.Reader) (LanguageMap, error) {
 func LoadLanguagesFromFile(path string) (LanguageMap, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open %s. %w", path, err)
+		return nil, fmt.Errorf("failed to open %q. %w", path, err)
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to close %s. %v", path, err)
+			fmt.Fprintf(os.Stderr, "failed to close %q. %v", path, err)
 		}
 	}()
 

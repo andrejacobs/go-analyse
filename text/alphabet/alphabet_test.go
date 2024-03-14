@@ -32,6 +32,11 @@ func TestGeneratedLanguages(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, lang, alphabet.Language{Name: "Arabic", Code: "ar", Letters: "أابتثجحخدذرزسشصضطظعغفقكلمنهؤوئىيء"})
 
+	_, err = alphabet.Builtin("golang")
+	assert.ErrorContains(t, err, "no built-in language found with code \"golang\"")
+
+	assert.NotEmpty(t, alphabet.BuiltinLanguages())
+
 	testCases := []struct {
 		code     alphabet.LanguageCode
 		check    rune

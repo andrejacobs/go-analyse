@@ -43,6 +43,9 @@ func TestLoadLanguagesFromFile(t *testing.T) {
 
 		assert.Equal(t, v, b)
 	}
+
+	_, err = alphabet.LoadLanguagesFromFile("testdata/naf.csv")
+	require.ErrorContains(t, err, "failed to open \"testdata/naf.csv\"")
 }
 
 func TestLoadLanguagesEmpty(t *testing.T) {
@@ -62,4 +65,10 @@ func TestLanguageMapGet(t *testing.T) {
 
 	_, err = languages.Get("zu")
 	assert.ErrorContains(t, err, "no language found with code \"zu\"")
+}
+
+func TestLoadLanguagesReadFailed(t *testing.T) {
+	var r FailReader
+	_, err := alphabet.LoadLanguages(&r)
+	assert.ErrorContains(t, err, "failed to parse csv")
 }
