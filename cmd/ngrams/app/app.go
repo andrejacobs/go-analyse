@@ -184,6 +184,9 @@ type options struct {
 	tokenSize int
 	discover  bool
 	update    bool
+
+	verbose  bool
+	progress bool
 }
 
 // optionFunc is called to configure the options the app needs to function.
@@ -287,6 +290,22 @@ func withInputPaths(paths []string) optionFunc {
 	}
 }
 
+// withVerbose configures the app to write more information out to Stdout.
+func withVerbose() optionFunc {
+	return func(opt *options) error {
+		opt.verbose = true
+		return nil
+	}
+}
+
+// withProgress configures the app to display progress updates on Stdout.
+func withProgress() optionFunc {
+	return func(opt *options) error {
+		opt.progress = true
+		return nil
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Command line parsing
 
@@ -334,6 +353,12 @@ func parseArgs() ([]optionFunc, error) {
 	flag.BoolVar(&showVersion, "v", false, "Display version information.")
 	flag.BoolVar(&showVersion, "version", false, "Display version information.")
 
+	var verbose bool
+	flag.BoolVar(&verbose, "verbose", false, "Display more information on STDOUT.")
+
+	var progress bool
+	flag.BoolVar(&progress, "progress", false, "Display progress updates on STDOUT.")
+
 	flag.Parse()
 
 	if showVersion {
@@ -368,6 +393,14 @@ func parseArgs() ([]optionFunc, error) {
 
 	if update {
 		opts = append(opts, withUpdate())
+	}
+
+	if verbose {
+		opts = append(opts, withVerbose())
+	}
+
+	if progress {
+		opts = append(opts, withProgress())
 	}
 
 	opts = append(opts, resolve())

@@ -25,6 +25,8 @@ func TestOptionsWithDefaults(t *testing.T) {
 	assert.False(t, opt.update)
 	assert.Equal(t, "", opt.outPath)
 	assert.Empty(t, opt.inputs)
+	assert.False(t, opt.verbose)
+	assert.False(t, opt.progress)
 }
 
 func TestParseArgs(t *testing.T) {
@@ -105,6 +107,9 @@ func TestParseArgs(t *testing.T) {
 		{desc: "input path", args: "./input1.txt ./input2.txt", assertFunc: func(t *testing.T, opt *options) {
 			assert.Equal(t, []string{"./input1.txt", "./input2.txt"}, opt.inputs)
 		}},
+
+		{desc: "verbose: --verbose", args: "--verbose ./in.txt", expected: []optionFunc{withVerbose()}},
+		{desc: "progress: --progress", args: "--progress ./in.txt", expected: []optionFunc{withProgress()}},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
