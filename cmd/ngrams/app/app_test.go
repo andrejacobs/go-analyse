@@ -91,56 +91,56 @@ func TestApp(t *testing.T) {
 
 		{desc: "monograms en-control", args: fmt.Sprintf("-s 1 -o %s %s", outPath, inputENControl), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputENControl1)
 		}},
 
 		{desc: "bigrams en-control", args: fmt.Sprintf("-s 2 -o %s %s", outPath, inputENControl), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputENControl2)
 		}},
 
 		{desc: "monograms af-control", args: fmt.Sprintf("-a af -s 1 -o %s %s", outPath, inputAFControl), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputAFControl1)
 		}},
 
 		{desc: "bigrams af-control", args: fmt.Sprintf("-a af -s 2 -o %s %s", outPath, inputAFControl), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputAFControl2)
 		}},
 
 		{desc: "bigrams en-alice-partial", args: fmt.Sprintf("-s 2 -o %s %s", outPath, inputENAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputENAlice2)
 		}},
 
 		{desc: "trigrams en-alice-partial", args: fmt.Sprintf("-s 3 -o %s %s", outPath, inputENAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputENAlice3)
 		}},
 
 		{desc: "bigrams fr-alice-partial", args: fmt.Sprintf("-a fr -s 2 -o %s %s", outPath, inputFRAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputFRAlice2)
 		}},
 
 		{desc: "trigrams fr-alice-partial", args: fmt.Sprintf("-a fr -s 3 -o %s %s", outPath, inputFRAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputFRAlice3)
 		}},
@@ -149,35 +149,35 @@ func TestApp(t *testing.T) {
 
 		{desc: "word monograms af-control", args: fmt.Sprintf("-w -a af -s 2 -o %s %s", outPath, inputAFControl), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputAFControlW2)
 		}},
 
 		{desc: "word bigrams en-alice-partial", args: fmt.Sprintf("-w -s 2 -o %s %s", outPath, inputENAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputENAliceW2)
 		}},
 
 		{desc: "word trigrams en-alice-partial", args: fmt.Sprintf("-w -s 3 -o %s %s", outPath, inputENAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputENAliceW3)
 		}},
 
 		{desc: "word bigrams fr-alice-partial", args: fmt.Sprintf("-w -a fr -s 2 -o %s %s", outPath, inputFRAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputFRAliceW2)
 		}},
 
 		{desc: "word trigrams fr-alice-partial", args: fmt.Sprintf("-w -a fr -s 3 -o %s %s", outPath, inputFRAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 			compareTwoFrequencyTableFiles(t, outPath, outputFRAliceW3)
 		}},
@@ -186,7 +186,7 @@ func TestApp(t *testing.T) {
 
 		{desc: "discover fr", args: fmt.Sprintf("-d -o %s %s", outPath, inputFRAlice), testFunc: func(t *testing.T) {
 			_, stdErr, err := runMain()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Empty(t, stdErr)
 
 			langs, err := alphabet.LoadLanguagesFromFile(outPath)
@@ -196,6 +196,38 @@ func TestApp(t *testing.T) {
 			assert.Equal(t, "unknown", lang.Name)
 
 			assert.ElementsMatch(t, []rune(`!"'()*,-.:;?[]_abcdefghijlmnopqrstuvxyzàâçèéêîôùûœ`), []rune(lang.Letters))
+		}},
+
+		// Update
+
+		{desc: "update af", args: fmt.Sprintf("-u -a af -s 2 -o %s %s", outPath, inputAFControl), testFunc: func(t *testing.T) {
+			os.Remove(outPath)
+			require.NoFileExists(t, outPath)
+
+			_, stdErr, err := runMain()
+			require.NoError(t, err)
+			assert.Empty(t, stdErr)
+
+			ft, err := ngrams.LoadFrequenciesFromFile(outPath)
+			require.NoError(t, err)
+
+			freq, exists := ft.Get("ôr")
+			assert.True(t, exists)
+
+			beforeUpdate := freq.Count
+
+			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+			_, stdErr, err = runMain()
+			require.NoError(t, err)
+			assert.Empty(t, stdErr)
+
+			ft, err = ngrams.LoadFrequenciesFromFile(outPath)
+			require.NoError(t, err)
+
+			freq, exists = ft.Get("ôr")
+			assert.True(t, exists)
+
+			assert.Equal(t, beforeUpdate*2, freq.Count)
 		}},
 	}
 	for _, tC := range testCases {

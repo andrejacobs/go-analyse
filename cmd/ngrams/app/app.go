@@ -69,8 +69,24 @@ func (a *application) run(out io.Writer, errOut io.Writer) error {
 }
 
 func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut io.Writer) error {
+	var ft *ngrams.FrequencyTable
+	var err error
+
 	if a.opt.update {
-		return fmt.Errorf("TODO: implement --update")
+		exists, err := pathExists(a.opt.outPath)
+		if err != nil {
+			return err
+		}
+		if exists {
+			ft, err = ngrams.LoadFrequenciesFromFile(a.opt.outPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			ft = ngrams.NewFrequencyTable()
+		}
+	} else {
+		ft = ngrams.NewFrequencyTable()
 	}
 
 	lang, err := a.opt.languages.Get(a.opt.langCode)
@@ -78,14 +94,13 @@ func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut 
 		return err
 	}
 
-	var ft *ngrams.FrequencyTable
 	if a.opt.words {
-		ft, err = ngrams.FrequencyTableByParsingWords(ctx, a.opt.inputs, lang, a.opt.tokenSize)
+		err = ft.UpdateTableByParsingWordsFromFiles(ctx, a.opt.inputs, lang, a.opt.tokenSize)
 		if err != nil {
 			return err
 		}
 	} else {
-		ft, err = ngrams.FrequencyTableByParsingLetters(ctx, a.opt.inputs, lang, a.opt.tokenSize)
+		err = ft.UpdateTableByParsingLettersFromFiles(ctx, a.opt.inputs, lang, a.opt.tokenSize)
 		if err != nil {
 			return err
 		}
@@ -404,4 +419,19 @@ func resolve() optionFunc {
 
 func printVersion(w io.Writer) {
 	io.WriteString(w, compiledinfo.UsageNameAndVersion()+"\n")
+}
+
+// Check if the path exists
+// If the path exists then (true, nil) is returned
+// If the path does not exist then (false, nil) is returned
+// If an error occurred while trying to check if the path exists then (false, err) is returned
+func pathExists(path string) (bool, error) {
+	//NOTE: This is copied from my previous fileutils package (replace this with the new planned repo/modules)
+	if _, err := os.Stat(path); err == nil {
+		return true, nil
+	} else if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	} else {
+		return false, err
+	}
 }

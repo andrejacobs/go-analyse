@@ -87,7 +87,7 @@ func LoadFrequenciesFromFile(path string) (*FrequencyTable, error) {
 
 	result, err := LoadFrequencies(f)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load languages from %q. %w", path, err)
+		return nil, fmt.Errorf("failed to load frequency table from %q. %w", path, err)
 	}
 
 	return result, nil

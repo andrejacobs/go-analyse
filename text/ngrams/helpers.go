@@ -9,36 +9,32 @@ import (
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 )
 
-// FrequencyTableByParsingLetters creates a new frequency table by parsing letter ngrams from the given input paths.
-func FrequencyTableByParsingLetters(ctx context.Context, paths []string,
-	language alphabet.Language, tokenSize int) (*FrequencyTable, error) {
-
-	ft := NewFrequencyTable()
+// UpdateTableByParsingLettersFromFiles updates the frequency table by parsing letter ngrams from the given input paths.
+func (ft *FrequencyTable) UpdateTableByParsingLettersFromFiles(ctx context.Context, paths []string,
+	language alphabet.Language, tokenSize int) error {
 
 	for _, path := range paths {
 		if err := ft.parseLettersFromFile(ctx, path, language, tokenSize); err != nil {
-			return nil, fmt.Errorf("failed to create the frequency table from the file %q. %w", path, err)
+			return fmt.Errorf("failed to update the frequency table from the file %q. %w", path, err)
 		}
 	}
 
 	ft.Update()
-	return ft, nil
+	return nil
 }
 
-// FrequencyTableByParsingWords creates a new frequency table by parsing word ngrams from the given input paths.
-func FrequencyTableByParsingWords(ctx context.Context, paths []string,
-	language alphabet.Language, tokenSize int) (*FrequencyTable, error) {
-
-	ft := NewFrequencyTable()
+// UpdateTableByParsingWordsFromFiles updates the frequency table by parsing word ngrams from the given input paths.
+func (ft *FrequencyTable) UpdateTableByParsingWordsFromFiles(ctx context.Context, paths []string,
+	language alphabet.Language, tokenSize int) error {
 
 	for _, path := range paths {
 		if err := ft.parseWordsFromFile(ctx, path, language, tokenSize); err != nil {
-			return nil, fmt.Errorf("failed to create the frequency table from the file %q. %w", path, err)
+			return fmt.Errorf("failed to update the frequency table from the file %q. %w", path, err)
 		}
 	}
 
 	ft.Update()
-	return ft, nil
+	return nil
 }
 
 func (ft *FrequencyTable) parseLettersFromFile(ctx context.Context, path string,

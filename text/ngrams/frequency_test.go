@@ -140,7 +140,8 @@ func TestFrequencyEntriesSortedByCount(t *testing.T) {
 // 	genFn := func(input string, output string, langCode alphabet.LanguageCode, tokenSize int) {
 // 		lang, err := alphabet.Builtin(langCode)
 // 		require.NoError(t, err)
-// 		ft, err := ngrams.FrequencyTableByParsingLetters(context.Background(),
+// 		ft := ngrams.NewFrequencyTable()
+// 		err = ft.UpdateTableByParsingLettersFromFiles(context.Background(),
 // 			[]string{input}, lang, tokenSize)
 // 		require.NoError(t, err)
 // 		out, err := os.Create(output)
@@ -170,7 +171,8 @@ func TestFrequencyEntriesSortedByCount(t *testing.T) {
 // 	genFn := func(input string, output string, langCode alphabet.LanguageCode, tokenSize int) {
 // 		lang, err := alphabet.Builtin(langCode)
 // 		require.NoError(t, err)
-// 		ft, err := ngrams.FrequencyTableByParsingWords(context.Background(),
+// 		ft := ngrams.NewFrequencyTable()
+// 		err = ft.UpdateTableByParsingWordsFromFiles(context.Background(),
 // 			[]string{input}, lang, tokenSize)
 // 		require.NoError(t, err)
 // 		out, err := os.Create(output)
