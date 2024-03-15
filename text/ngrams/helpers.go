@@ -13,7 +13,10 @@ import (
 func (ft *FrequencyTable) UpdateTableByParsingLettersFromFiles(ctx context.Context, paths []string,
 	language alphabet.Language, tokenSize int) error {
 
-	for _, path := range paths {
+	total := len(paths)
+
+	for i, path := range paths {
+		ft.progressReporter.Started(path, i, total)
 		if err := ft.parseLettersFromFile(ctx, path, language, tokenSize); err != nil {
 			return fmt.Errorf("failed to update the frequency table from the file %q. %w", path, err)
 		}
@@ -27,7 +30,10 @@ func (ft *FrequencyTable) UpdateTableByParsingLettersFromFiles(ctx context.Conte
 func (ft *FrequencyTable) UpdateTableByParsingWordsFromFiles(ctx context.Context, paths []string,
 	language alphabet.Language, tokenSize int) error {
 
-	for _, path := range paths {
+	total := len(paths)
+
+	for i, path := range paths {
+		ft.progressReporter.Started(path, i, total)
 		if err := ft.parseWordsFromFile(ctx, path, language, tokenSize); err != nil {
 			return fmt.Errorf("failed to update the frequency table from the file %q. %w", path, err)
 		}

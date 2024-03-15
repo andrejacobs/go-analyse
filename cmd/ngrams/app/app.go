@@ -14,6 +14,7 @@ import (
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/andrejacobs/go-analyse/text/ngrams"
 	"github.com/andrejacobs/go-collection/collection"
+	"github.com/schollz/progressbar/v3"
 )
 
 // Main parses the command line arguments and runs the app.
@@ -41,7 +42,8 @@ func Main(out io.Writer, errOut io.Writer) error {
 
 // application provides all the functionality for running the ngrams command line app.
 type application struct {
-	opt options
+	opt      options
+	progress *progressReporter
 }
 
 // newApp creates a new [application] with the given option configuration
@@ -60,6 +62,18 @@ func newApp(opts ...optionFunc) (*application, error) {
 
 func (a *application) run(out io.Writer, errOut io.Writer) error {
 	ctx := context.Background()
+
+	if a.opt.progress {
+		totalSize, err := sumFilesizes(a.opt.inputs)
+		if err != nil {
+			return err
+		}
+
+		a.progress = &progressReporter{
+			out:         out,
+			progressBar: progressbar.DefaultBytes(int64(totalSize)),
+		}
+	}
 
 	if a.opt.discover {
 		return a.discoverLetters(ctx, out, errOut)
@@ -87,6 +101,10 @@ func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut 
 		}
 	} else {
 		ft = ngrams.NewFrequencyTable()
+	}
+
+	if a.progress != nil {
+		ft.SetProgressReporter(a.progress)
 	}
 
 	lang, err := a.opt.languages.Get(a.opt.langCode)
@@ -467,4 +485,35 @@ func pathExists(path string) (bool, error) {
 	} else {
 		return false, err
 	}
+}
+
+func sumFilesizes(paths []string) (uint64, error) {
+	total := uint64(0)
+	for _, path := range paths {
+		fi, err := os.Stat(path)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get the file size for %q. %w", path, err)
+		}
+		total += uint64(fi.Size())
+	}
+
+	return total, nil
+}
+
+//-----------------------------------------------------------------------------
+// Progress reporting
+
+// Implements ngrams.Progress interface
+type progressReporter struct {
+	out         io.Writer
+	progressBar *progressbar.ProgressBar
+}
+
+func (p *progressReporter) Started(path string, index int, total int) {
+	p.progressBar.Describe(fmt.Sprintf("[%d/%d]", index+1, total))
+}
+
+func (p *progressReporter) Reader(r io.Reader) io.Reader {
+	pbr := progressbar.NewReader(r, p.progressBar)
+	return &pbr
 }

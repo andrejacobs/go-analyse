@@ -17,8 +17,9 @@ import (
 )
 
 type FrequencyTable struct {
-	frequencies tokenFrequencyMap
-	mu          sync.RWMutex
+	frequencies      tokenFrequencyMap
+	mu               sync.RWMutex
+	progressReporter ProgressReporter
 }
 
 // LoadFrequencies parses a frequency table from an io.Reader.
@@ -27,7 +28,8 @@ type FrequencyTable struct {
 // Lines starting with a # is ignored.
 func LoadFrequencies(r io.Reader) (*FrequencyTable, error) {
 	result := &FrequencyTable{
-		frequencies: make(tokenFrequencyMap),
+		frequencies:      make(tokenFrequencyMap),
+		progressReporter: &nullProgressReporter{},
 	}
 	csvR := csv.NewReader(r)
 
@@ -96,7 +98,8 @@ func LoadFrequenciesFromFile(path string) (*FrequencyTable, error) {
 // NewFrequencyTable creates a new [FrequencyTable].
 func NewFrequencyTable() *FrequencyTable {
 	return &FrequencyTable{
-		frequencies: make(tokenFrequencyMap),
+		frequencies:      make(tokenFrequencyMap),
+		progressReporter: &nullProgressReporter{},
 	}
 }
 
@@ -209,6 +212,11 @@ func (ft *FrequencyTable) Update() {
 	}
 }
 
+// SetProgressReporter sets the interface provider used for progress reporting.
+func (ft *FrequencyTable) SetProgressReporter(p ProgressReporter) {
+	ft.progressReporter = p
+}
+
 //-----------------------------------------------------------------------------
 
 // ParseLetterTokens is used to parse ngrams for letter combinations of the given tokenSize and language
@@ -216,7 +224,9 @@ func (ft *FrequencyTable) Update() {
 func (ft *FrequencyTable) ParseLetterTokens(ctx context.Context, input io.Reader, language alphabet.Language,
 	tokenSize int) error {
 
-	err := ParseLetterTokens(ctx, input, language, tokenSize,
+	r := ft.progressReporter.Reader(input)
+
+	err := ParseLetterTokens(ctx, r, language, tokenSize,
 		func(token string, err error) error {
 			if err == nil {
 				ft.Add(token, 1)
@@ -234,7 +244,9 @@ func (ft *FrequencyTable) ParseLetterTokens(ctx context.Context, input io.Reader
 func (ft *FrequencyTable) ParseWordTokens(ctx context.Context, input io.Reader, language alphabet.Language,
 	tokenSize int) error {
 
-	err := ParseWordTokens(ctx, input, language, tokenSize,
+	r := ft.progressReporter.Reader(input)
+
+	err := ParseWordTokens(ctx, r, language, tokenSize,
 		func(token string, err error) error {
 			if err == nil {
 				ft.Add(token, 1)
