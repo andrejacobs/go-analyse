@@ -58,7 +58,7 @@ What options work with what?
 
 -   `ngrams`
 
-    -   Input files can also be tar.gz.
+    -   Input files can also be zip.
     -   URLs can be specified instead of files to fetch corpora from the web. E.g. A GET request is made to the URL and then parsed.
         -   Would then need to think about allowing netscape style cookies.txt and also setting the user-agent.
         -   What about retries? exponential back-off.

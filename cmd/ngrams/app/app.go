@@ -145,13 +145,38 @@ func (a *application) discoverLetters(ctx context.Context, out io.Writer, errOut
 	}()
 
 	result := collection.NewSet[rune]()
+	total := len(a.opt.inputs)
 
-	for _, path := range a.opt.inputs {
-		runes, err := alphabet.DiscoverLettersFromFile(ctx, path)
+	closer := func(f io.ReadCloser, path string) {
+		if err := f.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: failed to close %q. %v", path, err)
+		}
+	}
+
+	for i, path := range a.opt.inputs {
+		if a.progress != nil {
+			a.progress.Started(path, i, total)
+		}
+
+		f, err := os.Open(path)
 		if err != nil {
+			return fmt.Errorf("failed to open %q. %w", path, err)
+		}
+
+		var r io.Reader
+		if a.progress != nil {
+			r = a.progress.Reader(f)
+		} else {
+			r = f
+		}
+
+		runes, err := alphabet.DiscoverLetters(ctx, r)
+		if err != nil {
+			closer(f, path)
 			return fmt.Errorf("failed to discover the letters from %q. %w", path, err)
 		}
 		result.InsertSlice(runes)
+		closer(f, path)
 	}
 
 	_, err = io.WriteString(f, "#code,name,letters\n")
