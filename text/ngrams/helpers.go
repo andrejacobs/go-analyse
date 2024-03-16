@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/andrejacobs/go-analyse/text/alphabet"
@@ -45,31 +46,34 @@ func (ft *FrequencyTable) UpdateTableByParsingWordsFromFiles(ctx context.Context
 
 func (ft *FrequencyTable) parseLettersFromFile(ctx context.Context, path string,
 	language alphabet.Language, tokenSize int) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("failed to parse the frequency table from the file %q. %w", path, err)
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: failed to close %s. %v", path, err)
+	return ft.processFile(ctx, path, func(ctx context.Context, r io.Reader) error {
+		err := ft.ParseLetterTokens(ctx, r, language, tokenSize)
+		if err != nil {
+			return fmt.Errorf("failed to parse the frequency table from the file %q. %w", path, err)
 		}
-	}()
-
-	r := bufio.NewReader(f)
-
-	err = ft.ParseLetterTokens(ctx, r, language, tokenSize)
-	if err != nil {
-		return fmt.Errorf("failed to parse the frequency table from the file %q. %w", path, err)
-	}
-
-	return nil
+		return nil
+	})
 }
 
 func (ft *FrequencyTable) parseWordsFromFile(ctx context.Context, path string,
 	language alphabet.Language, tokenSize int) error {
+	return ft.processFile(ctx, path, func(ctx context.Context, r io.Reader) error {
+		err := ft.ParseWordTokens(ctx, r, language, tokenSize)
+		if err != nil {
+			return fmt.Errorf("failed to parse the frequency table from the file %q. %w", path, err)
+		}
+		return nil
+	})
+}
+
+type processFileFunc func(ctx context.Context, r io.Reader) error
+
+func (ft *FrequencyTable) processFile(ctx context.Context, path string, fn processFileFunc) error {
+	//AJ### TODO: Add zip support
+
 	f, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("failed to parse the frequency table from the file %q. %w", path, err)
+		return fmt.Errorf("failed to open the file %q. %w", path, err)
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
@@ -78,11 +82,9 @@ func (ft *FrequencyTable) parseWordsFromFile(ctx context.Context, path string,
 	}()
 
 	r := bufio.NewReader(f)
-
-	err = ft.ParseWordTokens(ctx, r, language, tokenSize)
+	err = fn(ctx, r)
 	if err != nil {
-		return fmt.Errorf("failed to parse the frequency table from the file %q. %w", path, err)
+		return err
 	}
-
 	return nil
 }

@@ -15,6 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//AJ### TODO: Review this. Might be redundant testing given the helpers_test
+
 func TestParseLetterTokens(t *testing.T) {
 	enLang, err := alphabet.Builtin("en")
 	require.NoError(t, err)
