@@ -20,13 +20,22 @@ var languages = LanguageMap{
 	"sv": Language{Name: "Swedish", Code: "sv", Letters: "abcdefghijklmnopqrstuvwxyzåäö"},
 }
 
-// Language returns the built-in language for the given ISO 639 set 1 language.
+// Builtin returns the built-in language for the given ISO 639 set 1 language.
 func Builtin(code LanguageCode) (Language, error) {
 	lang, exists := languages[code]
 	if !exists {
 		return Language{}, fmt.Errorf("no built-in language found with code %q", code)
 	}
 	return lang, nil
+}
+
+// MustBuiltin returns the built-in language for the given ISO 639 set 1 language or panics.
+func MustBuiltin(code LanguageCode) Language {
+	lang, exists := languages[code]
+	if !exists {
+		panic(fmt.Errorf("no built-in language found with code %q", code))
+	}
+	return lang
 }
 
 // BuiltinLanguages return the built-in languages.

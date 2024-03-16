@@ -133,64 +133,17 @@ func TestFrequencyEntriesSortedByCount(t *testing.T) {
 	}
 }
 
-// // Use this to generate the test data
-// // Not ideal to be doing chicken-n-egg and generating the testdata using the code
-// // you actually want to test. I will just have to be 100% sure of the results
-// func TestGenerateLetterFrequencies(t *testing.T) {
-// 	genFn := func(input string, output string, langCode alphabet.LanguageCode, tokenSize int) {
-// 		lang, err := alphabet.Builtin(langCode)
-// 		require.NoError(t, err)
-// 		ft := ngrams.NewFrequencyTable()
-// 		err = ft.UpdateTableByParsingLettersFromFiles(context.Background(),
-// 			[]string{input}, lang, tokenSize)
-// 		require.NoError(t, err)
-// 		out, err := os.Create(output)
-// 		require.NoError(t, err)
-// 		ft.Save(out)
-// 		out.Close()
-// 	}
+func compareTwoFrequencyTables(t *testing.T, a *ngrams.FrequencyTable, b *ngrams.FrequencyTable) {
+	ae := a.EntriesSortedByCount()
+	be := b.EntriesSortedByCount()
+	assert.Equal(t, len(ae), len(be), "not the same number of rows")
 
-// 	genFn("testdata/en-control.txt", "testdata/freq-1-en-control.csv", "en", 1)
-// 	genFn("testdata/en-control.txt", "testdata/freq-2-en-control.csv", "en", 2)
-// 	genFn("testdata/af-control.txt", "testdata/freq-1-af-control.csv", "af", 1)
-// 	genFn("testdata/af-control.txt", "testdata/freq-2-af-control.csv", "af", 2)
-
-// 	genFn("testdata/en-alice-partial.txt", "testdata/freq-1-en-alice.csv", "en", 1)
-// 	genFn("testdata/en-alice-partial.txt", "testdata/freq-2-en-alice.csv", "en", 2)
-// 	genFn("testdata/en-alice-partial.txt", "testdata/freq-3-en-alice.csv", "en", 3)
-
-// 	genFn("testdata/fr-alice-partial.txt", "testdata/freq-1-fr-alice.csv", "fr", 1)
-// 	genFn("testdata/fr-alice-partial.txt", "testdata/freq-2-fr-alice.csv", "fr", 2)
-// 	genFn("testdata/fr-alice-partial.txt", "testdata/freq-3-fr-alice.csv", "fr", 3)
-// }
-
-// // Use this to generate the test data
-// // Not ideal to be doing chicken-n-egg and generating the testdata using the code
-// // you actually want to test. I will just have to be 100% sure of the results
-// func TestGenerateWordFrequencies(t *testing.T) {
-// 	genFn := func(input string, output string, langCode alphabet.LanguageCode, tokenSize int) {
-// 		lang, err := alphabet.Builtin(langCode)
-// 		require.NoError(t, err)
-// 		ft := ngrams.NewFrequencyTable()
-// 		err = ft.UpdateTableByParsingWordsFromFiles(context.Background(),
-// 			[]string{input}, lang, tokenSize)
-// 		require.NoError(t, err)
-// 		out, err := os.Create(output)
-// 		require.NoError(t, err)
-// 		ft.Save(out)
-// 		out.Close()
-// 	}
-
-// 	genFn("testdata/en-control.txt", "testdata/freq-1w-en-control.csv", "en", 1)
-// 	genFn("testdata/en-control.txt", "testdata/freq-2w-en-control.csv", "en", 2)
-// 	genFn("testdata/af-control.txt", "testdata/freq-1w-af-control.csv", "af", 1)
-// 	genFn("testdata/af-control.txt", "testdata/freq-2w-af-control.csv", "af", 2)
-
-// 	genFn("testdata/en-alice-partial.txt", "testdata/freq-1w-en-alice.csv", "en", 1)
-// 	genFn("testdata/en-alice-partial.txt", "testdata/freq-2w-en-alice.csv", "en", 2)
-// 	genFn("testdata/en-alice-partial.txt", "testdata/freq-3w-en-alice.csv", "en", 3)
-
-// 	genFn("testdata/fr-alice-partial.txt", "testdata/freq-1w-fr-alice.csv", "fr", 1)
-// 	genFn("testdata/fr-alice-partial.txt", "testdata/freq-2w-fr-alice.csv", "fr", 2)
-// 	genFn("testdata/fr-alice-partial.txt", "testdata/freq-3w-fr-alice.csv", "fr", 3)
-// }
+	for i, af := range ae {
+		bf := be[i]
+		assert.Equal(t, af.Token, bf.Token)
+		assert.Equal(t, af.Count, bf.Count)
+		assert.InEpsilon(t, af.Percentage, bf.Percentage, 0.00001,
+			"token a: %s, %d, %g\ntoken b: %s, %d, %g",
+			af.Token, af.Count, af.Percentage, bf.Token, bf.Count, bf.Percentage)
+	}
+}
