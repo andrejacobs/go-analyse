@@ -14,26 +14,30 @@ import (
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/andrejacobs/go-analyse/text/ngrams"
 	"github.com/andrejacobs/go-collection/collection"
+	"github.com/dustin/go-humanize"
 	"github.com/schollz/progressbar/v3"
 )
 
 // Main parses the command line arguments and runs the app.
 // Decoupled for unit-testing.
-func Main(out io.Writer, errOut io.Writer) error {
+func Main(stdOut io.Writer, stdErr io.Writer) error {
 	opts, err := parseArgs()
 	if err != nil {
-		fmt.Fprintf(errOut, "ERROR: %v\n", err)
+		if errors.Is(err, ErrExitWithNoErr) {
+			return nil
+		}
+		fmt.Fprintf(stdErr, "ERROR: %v\n", err)
 		return err
 	}
 
 	a, err := newApp(opts...)
 	if err != nil {
-		fmt.Fprintf(errOut, "ERROR: %v\n", err)
+		fmt.Fprintf(stdErr, "ERROR: %v\n", err)
 		return err
 	}
 
-	if err := a.run(out, errOut); err != nil {
-		fmt.Fprintf(errOut, "ERROR: %v\n", err)
+	if err := a.run(stdOut, stdErr); err != nil {
+		fmt.Fprintf(stdErr, "ERROR: %v\n", err)
 		return err
 	}
 
@@ -43,6 +47,8 @@ func Main(out io.Writer, errOut io.Writer) error {
 // application provides all the functionality for running the ngrams command line app.
 type application struct {
 	opt      options
+	stdOut   io.Writer
+	stdErr   io.Writer
 	progress *progressReporter
 }
 
@@ -60,29 +66,34 @@ func newApp(opts ...optionFunc) (*application, error) {
 	return result, nil
 }
 
-func (a *application) run(out io.Writer, errOut io.Writer) error {
+func (a *application) run(stdOut io.Writer, stdErr io.Writer) error {
 	ctx := context.Background()
 
+	a.stdOut = stdOut
+	a.stdErr = stdErr
+
 	if a.opt.progress {
+		a.verbose("Calculating file sizes...\n")
 		totalSize, err := sumFilesizes(a.opt.inputs)
+		a.verbose("Total size: %s\n", humanize.Bytes(totalSize))
 		if err != nil {
 			return err
 		}
 
 		a.progress = &progressReporter{
-			out:         out,
-			progressBar: progressbar.DefaultBytes(int64(totalSize)),
+			out:       a.stdOut,
+			totalSize: totalSize,
 		}
 	}
 
 	if a.opt.discover {
-		return a.discoverLetters(ctx, out, errOut)
+		return a.discoverLetters(ctx)
 	}
 
-	return a.generateNgrams(ctx, out, errOut)
+	return a.generateNgrams(ctx)
 }
 
-func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut io.Writer) error {
+func (a *application) generateNgrams(ctx context.Context) error {
 	var ft *ngrams.FrequencyTable
 	var err error
 
@@ -92,6 +103,7 @@ func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut 
 			return err
 		}
 		if exists {
+			a.verbose("Loading existing frequency table: %q\n", a.opt.outPath)
 			ft, err = ngrams.LoadFrequenciesFromFile(a.opt.outPath)
 			if err != nil {
 				return err
@@ -105,6 +117,8 @@ func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut 
 
 	if a.progress != nil {
 		ft.SetProgressReporter(a.progress)
+	} else if a.opt.verbose {
+		ft.SetProgressReporter(&verboseReporter{a: a})
 	}
 
 	lang, err := a.opt.languages.Get(a.opt.langCode)
@@ -112,12 +126,16 @@ func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut 
 		return err
 	}
 
+	a.verbose("Language: %s - %s\n", lang.Code, lang.Name)
+
 	if a.opt.words {
+		a.verbose("Generating %d word ngrams...\n", a.opt.tokenSize)
 		err = ft.UpdateTableByParsingWordsFromFiles(ctx, a.opt.inputs, lang, a.opt.tokenSize)
 		if err != nil {
 			return err
 		}
 	} else {
+		a.verbose("Generating %d letter ngrams...\n", a.opt.tokenSize)
 		err = ft.UpdateTableByParsingLettersFromFiles(ctx, a.opt.inputs, lang, a.opt.tokenSize)
 		if err != nil {
 			return err
@@ -128,19 +146,21 @@ func (a *application) generateNgrams(ctx context.Context, out io.Writer, errOut 
 		if err := a.saveFrequencyTable(ft); err != nil {
 			return err
 		}
+		a.verbose("Created frequency table at: %q\n", a.opt.outPath)
 	}
 
 	return nil
 }
 
-func (a *application) discoverLetters(ctx context.Context, out io.Writer, errOut io.Writer) error {
+func (a *application) discoverLetters(ctx context.Context) error {
+	a.verbose("Discovering letters being used...\n")
 	f, err := os.Create(a.opt.outPath)
 	if err != nil {
 		return fmt.Errorf("failed to create the languages file %q. %w", a.opt.outPath, err)
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: %s\n", err)
+			fmt.Fprintf(a.stdErr, "ERROR: %s\n", err)
 		}
 	}()
 
@@ -149,13 +169,15 @@ func (a *application) discoverLetters(ctx context.Context, out io.Writer, errOut
 
 	closer := func(f io.ReadCloser, path string) {
 		if err := f.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: failed to close %q. %v", path, err)
+			fmt.Fprintf(a.stdErr, "ERROR: failed to close %q. %v", path, err)
 		}
 	}
 
 	for i, path := range a.opt.inputs {
 		if a.progress != nil {
 			a.progress.Started(path, i, total)
+		} else {
+			a.verbose("[%d/%d] %s\n", i+1, total, path)
 		}
 
 		f, err := os.Open(path)
@@ -193,6 +215,7 @@ func (a *application) discoverLetters(ctx context.Context, out io.Writer, errOut
 		return fmt.Errorf("failed to write csv header to %q. %w", a.opt.outPath, err)
 	}
 
+	a.verbose("Created language file at: %q\n", a.opt.outPath)
 	return nil
 }
 
@@ -205,7 +228,7 @@ func (a *application) saveFrequencyTable(ft *ngrams.FrequencyTable) error {
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: failed to close %s. %v", path, err)
+			fmt.Fprintf(a.stdErr, "ERROR: failed to close %s. %v", path, err)
 		}
 	}()
 
@@ -213,6 +236,12 @@ func (a *application) saveFrequencyTable(ft *ngrams.FrequencyTable) error {
 		return fmt.Errorf("failed to save the frequency table to file %q. %w", path, err)
 	}
 	return nil
+}
+
+func (a *application) verbose(format string, args ...any) {
+	if a.opt.verbose {
+		fmt.Fprintf(a.stdOut, format, args...)
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -528,17 +557,39 @@ func sumFilesizes(paths []string) (uint64, error) {
 //-----------------------------------------------------------------------------
 // Progress reporting
 
+// With a Progress bar
 // Implements ngrams.Progress interface
 type progressReporter struct {
 	out         io.Writer
+	totalSize   uint64
 	progressBar *progressbar.ProgressBar
 }
 
 func (p *progressReporter) Started(path string, index int, total int) {
+	if p.progressBar == nil {
+		// Lazy initialized to stop writing progress bar before we actually started
+		// otherwise this interrupts other STDOUT printing
+		p.progressBar = progressbar.DefaultBytes(int64(p.totalSize))
+	}
 	p.progressBar.Describe(fmt.Sprintf("[%d/%d]", index+1, total))
 }
 
 func (p *progressReporter) Reader(r io.Reader) io.Reader {
 	pbr := progressbar.NewReader(r, p.progressBar)
 	return &pbr
+}
+
+// Only used when verbose is enabled and only
+// because I wanted to report which file is being worked on
+// Implements ngrams.Progress interface
+type verboseReporter struct {
+	a *application
+}
+
+func (v *verboseReporter) Started(path string, index int, total int) {
+	v.a.verbose("[%d/%d] %s\n", index+1, total, path)
+}
+
+func (v *verboseReporter) Reader(r io.Reader) io.Reader {
+	return r
 }
