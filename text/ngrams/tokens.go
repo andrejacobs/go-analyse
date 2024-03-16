@@ -20,7 +20,7 @@ type RecvTokenFunc func(token string, err error) error
 func ParseLetterTokens(ctx context.Context, input io.Reader, language alphabet.Language,
 	tokenSize int, recv RecvTokenFunc) error {
 
-	if tokenSize == 0 {
+	if tokenSize == 1 {
 		return parseLetterMonograms(ctx, input, language, recv)
 	}
 
