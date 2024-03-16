@@ -579,6 +579,10 @@ func (p *progressReporter) Reader(r io.Reader) io.Reader {
 	return &pbr
 }
 
+func (p *progressReporter) AddToTotalSize(add uint64) {
+	p.progressBar.ChangeMax64(int64(p.totalSize + add))
+}
+
 // Only used when verbose is enabled and only
 // because I wanted to report which file is being worked on
 // Implements ngrams.Progress interface
@@ -592,4 +596,7 @@ func (v *verboseReporter) Started(path string, index int, total int) {
 
 func (v *verboseReporter) Reader(r io.Reader) io.Reader {
 	return r
+}
+
+func (v *verboseReporter) AddToTotalSize(add uint64) {
 }

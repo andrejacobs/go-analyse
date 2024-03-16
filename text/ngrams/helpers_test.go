@@ -142,6 +142,34 @@ func TestUpdateTableByParsingLettersAndWordsFromFiles(t *testing.T) {
 				compareTwoFrequencyTables(t, expected, ft)
 			},
 		},
+
+		{desc: "multiple files words 1",
+			paths: []string{"testdata/af-control.txt", "testdata/en-control.txt"},
+			lang:  alphabet.MustBuiltin("af"), tokenSize: 1, words: true,
+			testFunc: func(t *testing.T, ft *ngrams.FrequencyTable) {
+				expected := ngrams.NewFrequencyTable()
+				err := expected.UpdateTableByParsingWordsFromFiles(context.Background(),
+					[]string{"testdata/en-control.txt", "testdata/af-control.txt"},
+					alphabet.MustBuiltin("af"), 1)
+				require.NoError(t, err)
+				compareTwoFrequencyTables(t, expected, ft)
+			},
+		},
+
+		// Zip file support
+		{desc: "zip file",
+			paths: []string{"testdata/collection1.ZIP"},
+			lang:  alphabet.MustBuiltin("en"), tokenSize: 1,
+			testFunc: func(t *testing.T, ft *ngrams.FrequencyTable) {
+				expected := ngrams.NewFrequencyTable()
+				err := expected.UpdateTableByParsingLettersFromFiles(context.Background(),
+					[]string{"testdata/en-control.txt", "testdata/af-control.txt",
+						"testdata/en-alice-partial.txt", "testdata/fr-alice-partial.txt"},
+					alphabet.MustBuiltin("en"), 1)
+				require.NoError(t, err)
+				compareTwoFrequencyTables(t, expected, ft)
+			},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
