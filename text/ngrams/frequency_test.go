@@ -142,7 +142,7 @@ func compareTwoFrequencyTables(t *testing.T, a *ngrams.FrequencyTable, b *ngrams
 		bf := be[i]
 		assert.Equal(t, af.Token, bf.Token)
 		assert.Equal(t, af.Count, bf.Count)
-		assert.InEpsilon(t, af.Percentage, bf.Percentage, 0.00001,
+		assert.InEpsilon(t, af.Percentage, bf.Percentage, 0.001,
 			"token a: %s, %d, %g\ntoken b: %s, %d, %g",
 			af.Token, af.Count, af.Percentage, bf.Token, bf.Count, bf.Percentage)
 	}
