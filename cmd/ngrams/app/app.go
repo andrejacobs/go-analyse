@@ -14,7 +14,6 @@ import (
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/andrejacobs/go-analyse/text/ngrams"
 	"github.com/andrejacobs/go-collection/collection"
-	"github.com/dustin/go-humanize"
 	"github.com/schollz/progressbar/v3"
 )
 
@@ -73,16 +72,8 @@ func (a *application) run(stdOut io.Writer, stdErr io.Writer) error {
 	a.stdErr = stdErr
 
 	if a.opt.progress {
-		a.verbose("Calculating file sizes...\n")
-		totalSize, err := sumFilesizes(a.opt.inputs)
-		a.verbose("Total size: %s\n", humanize.Bytes(totalSize))
-		if err != nil {
-			return err
-		}
-
 		a.progress = &progressReporter{
-			out:       a.stdOut,
-			totalSize: totalSize,
+			out: a.stdOut,
 		}
 	}
 
@@ -94,8 +85,14 @@ func (a *application) run(stdOut io.Writer, stdErr io.Writer) error {
 }
 
 func (a *application) generateNgrams(ctx context.Context) error {
-	var ft *ngrams.FrequencyTable
-	var err error
+
+	lang, err := a.opt.languages.Get(a.opt.langCode)
+	if err != nil {
+		return err
+	}
+	a.verbose("Language: %s - %s\n", lang.Code, lang.Name)
+
+	p := ngrams.NewProcessor(ngrams.ProcessorMode(a.opt.words), lang, a.opt.tokenSize)
 
 	if a.opt.update {
 		exists, err := pathExists(a.opt.outPath)
@@ -104,51 +101,40 @@ func (a *application) generateNgrams(ctx context.Context) error {
 		}
 		if exists {
 			a.verbose("Loading existing frequency table: %q\n", a.opt.outPath)
-			ft, err = ngrams.LoadFrequenciesFromFile(a.opt.outPath)
+			err = p.LoadFrequenciesFromFile(a.opt.outPath)
 			if err != nil {
 				return err
 			}
-		} else {
-			ft = ngrams.NewFrequencyTable()
 		}
-	} else {
-		ft = ngrams.NewFrequencyTable()
 	}
-
-	if a.progress != nil {
-		ft.SetProgressReporter(a.progress)
-	} else if a.opt.verbose {
-		ft.SetProgressReporter(&verboseReporter{a: a})
-	}
-
-	lang, err := a.opt.languages.Get(a.opt.langCode)
-	if err != nil {
-		return err
-	}
-
-	a.verbose("Language: %s - %s\n", lang.Code, lang.Name)
 
 	if a.opt.words {
 		a.verbose("Generating %d word ngrams...\n", a.opt.tokenSize)
-		err = ft.UpdateTableByParsingWordsFromFiles(ctx, a.opt.inputs, lang, a.opt.tokenSize)
-		if err != nil {
-			return err
-		}
 	} else {
 		a.verbose("Generating %d letter ngrams...\n", a.opt.tokenSize)
-		err = ft.UpdateTableByParsingLettersFromFiles(ctx, a.opt.inputs, lang, a.opt.tokenSize)
-		if err != nil {
-			return err
-		}
 	}
 
-	if ft != nil {
-		if err := a.saveFrequencyTable(ft); err != nil {
-			return err
-		}
-		a.verbose("Created frequency table at: %q\n", a.opt.outPath)
+	if a.progress != nil {
+		a.progress.progressBar = progressbar.DefaultBytes(1)
+		p.SetProgressReporter(a.progress)
+	} else if a.opt.verbose {
+		p.SetProgressReporter(&verboseReporter{a: a})
 	}
 
+	if err = p.ProcessFiles(ctx, a.opt.inputs); err != nil {
+		return err
+	}
+
+	if a.progress != nil {
+		a.progress.progressBar.Finish()
+	}
+
+	a.verbose("Saving frequency table...\n")
+	if err := p.Save(a.opt.outPath); err != nil {
+		return err
+	}
+
+	a.verbose("Created frequency table at: %q\n", a.opt.outPath)
 	return nil
 }
 
@@ -216,25 +202,6 @@ func (a *application) discoverLetters(ctx context.Context) error {
 	}
 
 	a.verbose("Created language file at: %q\n", a.opt.outPath)
-	return nil
-}
-
-func (a *application) saveFrequencyTable(ft *ngrams.FrequencyTable) error {
-	//AJ### TODO: Need to do "atomic" save and replace (if using update)
-	path := a.opt.outPath
-	f, err := os.Create(path)
-	if err != nil {
-		return fmt.Errorf("failed to save the frequency table to file %q. %w", path, err)
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Fprintf(a.stdErr, "ERROR: failed to close %s. %v", path, err)
-		}
-	}()
-
-	if err := ft.Save(f); err != nil {
-		return fmt.Errorf("failed to save the frequency table to file %q. %w", path, err)
-	}
 	return nil
 }
 
@@ -541,19 +508,6 @@ func pathExists(path string) (bool, error) {
 	}
 }
 
-func sumFilesizes(paths []string) (uint64, error) {
-	total := uint64(0)
-	for _, path := range paths {
-		fi, err := os.Stat(path)
-		if err != nil {
-			return 0, fmt.Errorf("failed to get the file size for %q. %w", path, err)
-		}
-		total += uint64(fi.Size())
-	}
-
-	return total, nil
-}
-
 //-----------------------------------------------------------------------------
 // Progress reporting
 
@@ -561,16 +515,11 @@ func sumFilesizes(paths []string) (uint64, error) {
 // Implements ngrams.Progress interface
 type progressReporter struct {
 	out         io.Writer
-	totalSize   uint64
+	totalSize   int64
 	progressBar *progressbar.ProgressBar
 }
 
 func (p *progressReporter) Started(path string, index int, total int) {
-	if p.progressBar == nil {
-		// Lazy initialized to stop writing progress bar before we actually started
-		// otherwise this interrupts other STDOUT printing
-		p.progressBar = progressbar.DefaultBytes(int64(p.totalSize))
-	}
 	p.progressBar.Describe(fmt.Sprintf("[%d/%d]", index+1, total))
 }
 
@@ -579,8 +528,18 @@ func (p *progressReporter) Reader(r io.Reader) io.Reader {
 	return &pbr
 }
 
-func (p *progressReporter) AddToTotalSize(add uint64) {
-	p.progressBar.ChangeMax64(int64(p.totalSize + add))
+func (p *progressReporter) AddToTotalSize(add int64) {
+	if add < 0 {
+		// The processor will inform us to subtract the zip file size
+		// since the real size is dependant on the total uncompressed size
+		// of all the zipped files.
+		// However the progress bar will stop updating when it thinks we reached the Max64
+		// which does happens just before we get a chance to update the new Max64 size
+		// so the hack here is to just be one byte short
+		add += 1
+	}
+	p.totalSize += add
+	p.progressBar.ChangeMax64(int64(p.totalSize))
 }
 
 // Only used when verbose is enabled and only
@@ -598,5 +557,5 @@ func (v *verboseReporter) Reader(r io.Reader) io.Reader {
 	return r
 }
 
-func (v *verboseReporter) AddToTotalSize(add uint64) {
+func (v *verboseReporter) AddToTotalSize(add int64) {
 }

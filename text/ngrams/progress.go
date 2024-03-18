@@ -14,7 +14,7 @@ type ProgressReporter interface {
 
 	// AddToTotalSize is called when the total number of bytes to be processed has changed.
 	// For example like reading from a zip file.
-	AddToTotalSize(add uint64)
+	AddToTotalSize(add int64)
 }
 
 //-----------------------------------------------------------------------------
@@ -30,5 +30,5 @@ func (n *nullProgressReporter) Reader(r io.Reader) io.Reader {
 	return r
 }
 
-func (n *nullProgressReporter) AddToTotalSize(add uint64) {
+func (n *nullProgressReporter) AddToTotalSize(add int64) {
 }

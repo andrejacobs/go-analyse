@@ -1,7 +1,11 @@
 package ngrams_test
 
 import (
+	"bufio"
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/andrejacobs/go-analyse/text/alphabet"
@@ -10,7 +14,38 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUpdateTableByParsingLettersAndWordsFromFiles(t *testing.T) {
+func TestProcessorLoadFrequenciesFromFile(t *testing.T) {
+	p := ngrams.NewProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
+	err := p.LoadFrequenciesFromFile("testdata/freq-load-test.txt")
+	require.NoError(t, err)
+
+	ft := p.FrequencyTable()
+	assert.Equal(t, 3, ft.Len())
+	assert.ElementsMatch(t, []string{"the", "fox", "she"}, ft.Tokens())
+}
+
+func TestProcessorLoadFrequenciesFromFileFail(t *testing.T) {
+	p := ngrams.NewProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
+	err := p.LoadFrequenciesFromFile("testdata/freq-load-fail.txt")
+	assert.ErrorContains(t, err, "failed to parse the count field from the csv")
+}
+
+func TestProcessorLoadAndSaveFrequenciesFromFile(t *testing.T) {
+	p := ngrams.NewProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
+	err := p.LoadFrequenciesFromFile("testdata/freq-load-test.txt")
+	require.NoError(t, err)
+
+	temp := filepath.Join(os.TempDir(), "ngrams-unit-test.csv")
+	defer os.Remove(temp)
+	require.NoError(t, p.Save(temp))
+
+	p2 := ngrams.NewProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
+	require.NoError(t, p2.LoadFrequenciesFromFile(temp))
+
+	compareTwoFrequencyTables(t, p.FrequencyTable(), p2.FrequencyTable())
+}
+
+func TestProcessorProcessFiles(t *testing.T) {
 	testCases := []struct {
 		desc      string
 		paths     []string
@@ -19,7 +54,7 @@ func TestUpdateTableByParsingLettersAndWordsFromFiles(t *testing.T) {
 		words     bool
 		errMsg    string
 		expFreqs  string
-		testFunc  func(t *testing.T, ft *ngrams.FrequencyTable)
+		testFunc  func(t *testing.T, p *ngrams.Processor)
 	}{
 		// Letters
 		{desc: "af-control 1",
@@ -129,57 +164,39 @@ func TestUpdateTableByParsingLettersAndWordsFromFiles(t *testing.T) {
 			expFreqs: "testdata/freq-3w-fr-alice.csv",
 		},
 
-		// Multiple input files
-		{desc: "multiple files 1",
-			paths: []string{"testdata/af-control.txt", "testdata/en-control.txt"},
-			lang:  alphabet.MustBuiltin("af"), tokenSize: 1,
-			testFunc: func(t *testing.T, ft *ngrams.FrequencyTable) {
-				expected := ngrams.NewFrequencyTable()
-				err := expected.UpdateTableByParsingLettersFromFiles(context.Background(),
-					[]string{"testdata/en-control.txt", "testdata/af-control.txt"},
-					alphabet.MustBuiltin("af"), 1)
-				require.NoError(t, err)
-				compareTwoFrequencyTables(t, expected, ft)
-			},
-		},
-
 		{desc: "multiple files words 1",
 			paths: []string{"testdata/af-control.txt", "testdata/en-control.txt"},
 			lang:  alphabet.MustBuiltin("af"), tokenSize: 1, words: true,
-			testFunc: func(t *testing.T, ft *ngrams.FrequencyTable) {
-				expected := ngrams.NewFrequencyTable()
-				err := expected.UpdateTableByParsingWordsFromFiles(context.Background(),
-					[]string{"testdata/en-control.txt", "testdata/af-control.txt"},
+			testFunc: func(t *testing.T, p *ngrams.Processor) {
+				ft, err := loadWordFrequenciesFromFiles([]string{
+					"testdata/en-control.txt",
+					"testdata/af-control.txt"},
 					alphabet.MustBuiltin("af"), 1)
 				require.NoError(t, err)
-				compareTwoFrequencyTables(t, expected, ft)
+				compareTwoFrequencyTables(t, ft, p.FrequencyTable())
 			},
 		},
 
 		// Zip file support
 		{desc: "zip file",
 			paths: []string{"testdata/collection1.ZIP"},
-			lang:  alphabet.MustBuiltin("en"), tokenSize: 1,
-			testFunc: func(t *testing.T, ft *ngrams.FrequencyTable) {
-				expected := ngrams.NewFrequencyTable()
-				err := expected.UpdateTableByParsingLettersFromFiles(context.Background(),
-					[]string{"testdata/en-control.txt", "testdata/af-control.txt",
-						"testdata/en-alice-partial.txt", "testdata/fr-alice-partial.txt"},
+			lang:  alphabet.MustBuiltin("en"), tokenSize: 1, words: true,
+			testFunc: func(t *testing.T, p *ngrams.Processor) {
+				ft, err := loadWordFrequenciesFromFiles([]string{
+					"testdata/en-control.txt",
+					"testdata/af-control.txt",
+					"testdata/en-alice-partial.txt",
+					"testdata/fr-alice-partial.txt"},
 					alphabet.MustBuiltin("en"), 1)
 				require.NoError(t, err)
-				compareTwoFrequencyTables(t, expected, ft)
+				compareTwoFrequencyTables(t, ft, p.FrequencyTable())
 			},
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			var err error
-			ft := ngrams.NewFrequencyTable()
-			if tC.words {
-				err = ft.UpdateTableByParsingWordsFromFiles(context.Background(), tC.paths, tC.lang, tC.tokenSize)
-			} else {
-				err = ft.UpdateTableByParsingLettersFromFiles(context.Background(), tC.paths, tC.lang, tC.tokenSize)
-			}
+			p := ngrams.NewProcessor(ngrams.ProcessorMode(tC.words), tC.lang, tC.tokenSize)
+			err := p.ProcessFiles(context.Background(), tC.paths)
 
 			if tC.errMsg != "" {
 				assert.ErrorContains(t, err, tC.errMsg)
@@ -188,12 +205,39 @@ func TestUpdateTableByParsingLettersAndWordsFromFiles(t *testing.T) {
 			if tC.expFreqs != "" {
 				expected, err := ngrams.LoadFrequenciesFromFile(tC.expFreqs)
 				require.NoError(t, err)
-				compareTwoFrequencyTables(t, expected, ft)
+				compareTwoFrequencyTables(t, expected, p.FrequencyTable())
 			}
 
 			if tC.testFunc != nil {
-				tC.testFunc(t, ft)
+				tC.testFunc(t, p)
 			}
 		})
 	}
+}
+
+//-----------------------------------------------------------------------------
+
+func loadWordFrequenciesFromFiles(paths []string, language alphabet.Language, tokenSize int) (*ngrams.FrequencyTable, error) {
+	ft := ngrams.NewFrequencyTable()
+
+	for _, path := range paths {
+		f, err := os.Open(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open the file %q. %w", path, err)
+		}
+		defer func() {
+			if err := f.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "ERROR: failed to close %s. %v", path, err)
+			}
+		}()
+
+		r := bufio.NewReader(f)
+
+		if err := ft.ParseWordTokens(context.Background(), r, language, tokenSize); err != nil {
+			return nil, err
+		}
+	}
+
+	ft.Update()
+	return ft, nil
 }
