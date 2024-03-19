@@ -3,11 +3,14 @@ package alphabet_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDiscoverLetters(t *testing.T) {
@@ -49,6 +52,27 @@ func TestDiscoverLettersFromFile(t *testing.T) {
 
 	_, err = alphabet.DiscoverLettersFromFile(context.Background(), "testdata/naf.txt")
 	assert.ErrorContains(t, err, "failed to open \"testdata/naf.txt\"")
+}
+
+func TestDiscoverProcessor(t *testing.T) {
+	expected := []rune("',-;abdefghiklmnoqrstuvwyàçèéô善士改武道")
+
+	p := alphabet.NewDiscoverProcessor()
+	err := p.ProcessFiles(context.Background(), []string{"testdata/discover.txt"})
+	require.NoError(t, err)
+	assert.ElementsMatch(t, expected, p.Letters())
+
+	temp := filepath.Join(os.TempDir(), "alphabet-unit-test-lang.csv")
+	defer os.Remove(temp)
+	require.NoError(t, p.Save(temp))
+
+	am, err := alphabet.LoadLanguagesFromFile(temp)
+	require.NoError(t, err)
+	lang, err := am.Get("unknown")
+	assert.NoError(t, err)
+	assert.Equal(t, "unknown", lang.Name)
+	assert.Equal(t, alphabet.LanguageCode("unknown"), lang.Code)
+	assert.ElementsMatch(t, expected, []rune(lang.Letters))
 }
 
 // -----------------------------------------------------------------------------
