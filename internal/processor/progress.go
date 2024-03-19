@@ -1,4 +1,4 @@
-package ngrams
+package processor
 
 import "io"
 
@@ -6,6 +6,7 @@ import "io"
 type ProgressReporter interface {
 	// Started will be called when a new path is being processed.
 	// index is the 0th based index of the path in the total number of paths.
+	// path uniquely identifies a resource and does not have to be a file path (e.g. a URI)
 	Started(path string, index int, total int)
 
 	// Reader returns a new wrapped reader that will update and report progress as data

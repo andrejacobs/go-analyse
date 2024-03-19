@@ -92,7 +92,7 @@ func (a *application) generateNgrams(ctx context.Context) error {
 	}
 	a.verbose("Language: %s - %s\n", lang.Code, lang.Name)
 
-	p := ngrams.NewProcessor(ngrams.ProcessorMode(a.opt.words), lang, a.opt.tokenSize)
+	p := ngrams.NewFrequencyProcessor(ngrams.ProcessorMode(a.opt.words), lang, a.opt.tokenSize)
 
 	if a.opt.update {
 		exists, err := pathExists(a.opt.outPath)
@@ -158,6 +158,8 @@ func (a *application) discoverLetters(ctx context.Context) error {
 			fmt.Fprintf(a.stdErr, "ERROR: failed to close %q. %v", path, err)
 		}
 	}
+
+	//AJ### Refactor this. Also this needs to support zip files
 
 	for i, path := range a.opt.inputs {
 		if a.progress != nil {

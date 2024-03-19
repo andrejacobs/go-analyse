@@ -15,7 +15,7 @@ import (
 )
 
 func TestProcessorLoadFrequenciesFromFile(t *testing.T) {
-	p := ngrams.NewProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
+	p := ngrams.NewFrequencyProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
 	err := p.LoadFrequenciesFromFile("testdata/freq-load-test.txt")
 	require.NoError(t, err)
 
@@ -25,13 +25,13 @@ func TestProcessorLoadFrequenciesFromFile(t *testing.T) {
 }
 
 func TestProcessorLoadFrequenciesFromFileFail(t *testing.T) {
-	p := ngrams.NewProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
+	p := ngrams.NewFrequencyProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
 	err := p.LoadFrequenciesFromFile("testdata/freq-load-fail.txt")
 	assert.ErrorContains(t, err, "failed to parse the count field from the csv")
 }
 
 func TestProcessorLoadAndSaveFrequenciesFromFile(t *testing.T) {
-	p := ngrams.NewProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
+	p := ngrams.NewFrequencyProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
 	err := p.LoadFrequenciesFromFile("testdata/freq-load-test.txt")
 	require.NoError(t, err)
 
@@ -39,7 +39,7 @@ func TestProcessorLoadAndSaveFrequenciesFromFile(t *testing.T) {
 	defer os.Remove(temp)
 	require.NoError(t, p.Save(temp))
 
-	p2 := ngrams.NewProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
+	p2 := ngrams.NewFrequencyProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 1)
 	require.NoError(t, p2.LoadFrequenciesFromFile(temp))
 
 	compareTwoFrequencyTables(t, p.FrequencyTable(), p2.FrequencyTable())
@@ -54,7 +54,7 @@ func TestProcessorProcessFiles(t *testing.T) {
 		words     bool
 		errMsg    string
 		expFreqs  string
-		testFunc  func(t *testing.T, p *ngrams.Processor)
+		testFunc  func(t *testing.T, p *ngrams.FrequencyProcessor)
 	}{
 		// Letters
 		{desc: "af-control 1",
@@ -167,7 +167,7 @@ func TestProcessorProcessFiles(t *testing.T) {
 		{desc: "multiple files words 1",
 			paths: []string{"testdata/af-control.txt", "testdata/en-control.txt"},
 			lang:  alphabet.MustBuiltin("af"), tokenSize: 1, words: true,
-			testFunc: func(t *testing.T, p *ngrams.Processor) {
+			testFunc: func(t *testing.T, p *ngrams.FrequencyProcessor) {
 				ft, err := loadWordFrequenciesFromFiles([]string{
 					"testdata/en-control.txt",
 					"testdata/af-control.txt"},
@@ -181,7 +181,7 @@ func TestProcessorProcessFiles(t *testing.T) {
 		{desc: "zip file",
 			paths: []string{"testdata/collection1.ZIP"},
 			lang:  alphabet.MustBuiltin("en"), tokenSize: 1, words: true,
-			testFunc: func(t *testing.T, p *ngrams.Processor) {
+			testFunc: func(t *testing.T, p *ngrams.FrequencyProcessor) {
 				ft, err := loadWordFrequenciesFromFiles([]string{
 					"testdata/en-control.txt",
 					"testdata/af-control.txt",
@@ -195,7 +195,7 @@ func TestProcessorProcessFiles(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			p := ngrams.NewProcessor(ngrams.ProcessorMode(tC.words), tC.lang, tC.tokenSize)
+			p := ngrams.NewFrequencyProcessor(ngrams.ProcessorMode(tC.words), tC.lang, tC.tokenSize)
 			err := p.ProcessFiles(context.Background(), tC.paths)
 
 			if tC.errMsg != "" {
