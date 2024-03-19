@@ -79,7 +79,7 @@ func (p *FrequencyProcessor) Save(path string) error {
 	return nil
 }
 
-// // UpdateTableByParsingLettersFromFiles updates the frequency table by parsing letter ngrams from the given input paths.
+// ProcessFiles updates the frequency table by parsing letter or word ngrams from the given input paths.
 func (p *FrequencyProcessor) ProcessFiles(ctx context.Context, paths []string) error {
 	var fn processor.ProcessFunc
 	if p.mode == ProcessWords {

@@ -7,13 +7,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/andrejacobs/go-analyse/internal/compiledinfo"
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/andrejacobs/go-analyse/text/ngrams"
-	"github.com/andrejacobs/go-collection/collection"
 	"github.com/schollz/progressbar/v3"
 )
 
@@ -140,67 +138,26 @@ func (a *application) generateNgrams(ctx context.Context) error {
 
 func (a *application) discoverLetters(ctx context.Context) error {
 	a.verbose("Discovering letters being used...\n")
-	f, err := os.Create(a.opt.outPath)
-	if err != nil {
-		return fmt.Errorf("failed to create the languages file %q. %w", a.opt.outPath, err)
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Fprintf(a.stdErr, "ERROR: %s\n", err)
-		}
-	}()
 
-	result := collection.NewSet[rune]()
-	total := len(a.opt.inputs)
+	p := alphabet.NewDiscoverProcessor()
 
-	closer := func(f io.ReadCloser, path string) {
-		if err := f.Close(); err != nil {
-			fmt.Fprintf(a.stdErr, "ERROR: failed to close %q. %v", path, err)
-		}
+	if a.progress != nil {
+		a.progress.progressBar = progressbar.DefaultBytes(1)
+		p.SetProgressReporter(a.progress)
+	} else if a.opt.verbose {
+		p.SetProgressReporter(&verboseReporter{a: a})
 	}
 
-	//AJ### Refactor this. Also this needs to support zip files
-
-	for i, path := range a.opt.inputs {
-		if a.progress != nil {
-			a.progress.Started(path, i, total)
-		} else {
-			a.verbose("[%d/%d] %s\n", i+1, total, path)
-		}
-
-		f, err := os.Open(path)
-		if err != nil {
-			return fmt.Errorf("failed to open %q. %w", path, err)
-		}
-
-		var r io.Reader
-		if a.progress != nil {
-			r = a.progress.Reader(f)
-		} else {
-			r = f
-		}
-
-		runes, err := alphabet.DiscoverLetters(ctx, r)
-		if err != nil {
-			closer(f, path)
-			return fmt.Errorf("failed to discover the letters from %q. %w", path, err)
-		}
-		result.InsertSlice(runes)
-		closer(f, path)
+	if err := p.ProcessFiles(ctx, a.opt.inputs); err != nil {
+		return err
 	}
 
-	_, err = io.WriteString(f, "#code,name,letters\n")
-	if err != nil {
-		return fmt.Errorf("failed to write csv header to %q. %w", a.opt.outPath, err)
+	if a.progress != nil {
+		a.progress.progressBar.Finish()
 	}
 
-	runes := result.Items()
-	slices.Sort(runes)
-	letters := strings.ReplaceAll(string(runes), `"`, `""`)
-
-	_, err = io.WriteString(f, `unknown,unknown,"`+letters+`"`)
-	if err != nil {
-		return fmt.Errorf("failed to write csv header to %q. %w", a.opt.outPath, err)
+	if err := p.Save(a.opt.outPath); err != nil {
+		return err
 	}
 
 	a.verbose("Created language file at: %q\n", a.opt.outPath)
