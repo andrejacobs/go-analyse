@@ -75,9 +75,3 @@ Overview of the packages provided by this module
 
 -   `text/alphabet`
     -   Describe the valid set of unicode runes that are used in other packages to perform text analysis.
-
-## Reference
-
--   Lib1
--   Tool1
--   etc.
