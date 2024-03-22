@@ -100,6 +100,10 @@ check-lint:
 	@echo "Linting code"
 	go vet ./...
 	golangci-lint run
+ifneq (${CI}, true)
+	golangci-lint run
+	addlicense -check -c "Andre Jacobs" -l mit -ignore '.github/**' -ignore 'build/**' ./
+endif
 
 # Check code quality
 .PHONY: check
@@ -124,3 +128,9 @@ go-tidy:
 go-generate:
 	go generate ./...
 	gofmt -w text/alphabet/languages.go
+
+# Add the copyright and license notice
+.PHONY: addlic
+addlic:
+	@echo "Adding copyright and license notice"
+	addlicense -v -c "Andre Jacobs" -l mit -ignore '.github/**' -ignore 'build/**' ./
