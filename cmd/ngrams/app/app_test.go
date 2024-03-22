@@ -264,7 +264,7 @@ func validLanguagesFile(t *testing.T) string {
 	require.NoError(t, err)
 	defer f.Close()
 
-	io.WriteString(f, `#code,name,letters
+	_, _ = io.WriteString(f, `#code,name,letters
 en,English,abcdefghijklmnopqrstuvwxyz
 coding,Coding,{}[]()/$
 `)
@@ -305,7 +305,7 @@ const (
 	inputENAlice   = ngramTestData + "en-alice-partial.txt"
 	inputFRAlice   = ngramTestData + "fr-alice-partial.txt"
 
-	// Letters
+	// Letters.
 	outputENControl1 = ngramTestData + "freq-1-en-control.csv"
 	outputENControl2 = ngramTestData + "freq-2-en-control.csv"
 
@@ -318,7 +318,7 @@ const (
 	outputFRAlice2 = ngramTestData + "freq-2-fr-alice.csv"
 	outputFRAlice3 = ngramTestData + "freq-3-fr-alice.csv"
 
-	// Words
+	// Words.
 	outputAFControlW2 = ngramTestData + "freq-2w-af-control.csv"
 
 	outputENAliceW2 = ngramTestData + "freq-2w-en-alice.csv"

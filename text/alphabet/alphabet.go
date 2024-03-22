@@ -30,7 +30,7 @@ func (l Language) ContainsRune(r rune) bool {
 	return strings.ContainsRune(l.Letters, r)
 }
 
-// Get the language for the given code or return an error
+// Get the language for the given code or return an error.
 func (lm LanguageMap) Get(code LanguageCode) (Language, error) {
 	lang, exists := lm[code]
 	if !exists {

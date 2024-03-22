@@ -75,7 +75,8 @@ func TestDiscoverProcessor(t *testing.T) {
 	assert.ElementsMatch(t, expected, []rune(lang.Letters))
 }
 
-// -----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
 type FailReader bool
 
 func (fr *FailReader) Read(p []byte) (n int, err error) {

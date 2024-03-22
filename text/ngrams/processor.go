@@ -19,7 +19,7 @@ type FrequencyProcessor struct {
 	mode      ProcessorMode
 }
 
-// ProcessorMode specifies whether the processor works on letter or word ngrams
+// ProcessorMode specifies whether the processor works on letter or word ngrams.
 type ProcessorMode bool
 
 const (

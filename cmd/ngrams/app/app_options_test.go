@@ -164,7 +164,7 @@ func validLanguagesFile(t *testing.T) string {
 	require.NoError(t, err)
 	defer f.Close()
 
-	io.WriteString(f, `#code,name,letters
+	_, _ = io.WriteString(f, `#code,name,letters
 en,English,abcdefghijklmnopqrstuvwxyz
 coding,Coding,{}[]()/$
 `)

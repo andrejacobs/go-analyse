@@ -2,7 +2,7 @@ package processor
 
 import "io"
 
-// ProgressReporter is used to report progress updates
+// ProgressReporter is used to report progress updates.
 type ProgressReporter interface {
 	// Started will be called when a new path is being processed.
 	// index is the 0th based index of the path in the total number of paths.

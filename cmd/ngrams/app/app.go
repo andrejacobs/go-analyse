@@ -49,7 +49,7 @@ type application struct {
 	progress *progressReporter
 }
 
-// newApp creates a new [application] with the given option configuration
+// newApp creates a new [application] with the given option configuration.
 func newApp(opts ...optionFunc) (*application, error) {
 	var opt options
 	if err := applyOptions(&opt, opts); err != nil {
@@ -124,7 +124,7 @@ func (a *application) generateNgrams(ctx context.Context) error {
 	}
 
 	if a.progress != nil {
-		a.progress.progressBar.Finish()
+		_ = a.progress.progressBar.Finish()
 	}
 
 	a.verbose("Saving frequency table...\n")
@@ -153,7 +153,7 @@ func (a *application) discoverLetters(ctx context.Context) error {
 	}
 
 	if a.progress != nil {
-		a.progress.progressBar.Finish()
+		_ = a.progress.progressBar.Finish()
 	}
 
 	if err := p.Save(a.opt.outPath); err != nil {
@@ -201,7 +201,7 @@ func withDefaults() optionFunc {
 	}
 }
 
-// withLanguageCode configures the langauge to be used.
+// withLanguageCode configures the language to be used.
 func withLanguageCode(code alphabet.LanguageCode) optionFunc {
 	return func(opt *options) error {
 		opt.langCode = code
@@ -209,7 +209,7 @@ func withLanguageCode(code alphabet.LanguageCode) optionFunc {
 	}
 }
 
-// withLanguagesFile will load the languages from the given file path
+// withLanguagesFile will load the languages from the given file path.
 func withLanguagesFile(path string) optionFunc {
 	return func(opt *options) error {
 		var err error
@@ -449,13 +449,13 @@ func resolve() optionFunc {
 }
 
 func printVersion(w io.Writer) {
-	io.WriteString(w, compiledinfo.UsageNameAndVersion()+"\n")
+	_, _ = io.WriteString(w, compiledinfo.UsageNameAndVersion()+"\n")
 }
 
-// Check if the path exists
-// If the path exists then (true, nil) is returned
-// If the path does not exist then (false, nil) is returned
-// If an error occurred while trying to check if the path exists then (false, err) is returned
+// Check if the path exists.
+// If the path exists then (true, nil) is returned.
+// If the path does not exist then (false, nil) is returned.
+// If an error occurred while trying to check if the path exists then (false, err) is returned.
 func pathExists(path string) (bool, error) {
 	//NOTE: This is copied from my previous fileutils package (replace this with the new planned repo/modules)
 	if _, err := os.Stat(path); err == nil {
@@ -470,8 +470,8 @@ func pathExists(path string) (bool, error) {
 //-----------------------------------------------------------------------------
 // Progress reporting
 
-// With a Progress bar
-// Implements ngrams.Progress interface
+// With a Progress bar.
+// Implements ngrams.Progress interface.
 type progressReporter struct {
 	out         io.Writer
 	totalSize   int64
@@ -502,8 +502,8 @@ func (p *progressReporter) AddToTotalSize(add int64) {
 }
 
 // Only used when verbose is enabled and only
-// because I wanted to report which file is being worked on
-// Implements ngrams.Progress interface
+// because I wanted to report which file is being worked on.
+// Implements ngrams.Progress interface.
 type verboseReporter struct {
 	a *application
 }

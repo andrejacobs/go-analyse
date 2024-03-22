@@ -108,7 +108,7 @@ func (ft *FrequencyTable) Len() int {
 }
 
 // Entries returns the token frequencies in the table.
-// NOTE: The order can not be guarenteed since the underlying data structure uses a map.
+// NOTE: The order can not be guaranteed since the underlying data structure uses a map.
 func (ft *FrequencyTable) Entries() []Frequency {
 	ft.mu.RLock()
 	defer ft.mu.RUnlock()
@@ -139,7 +139,7 @@ func (ft *FrequencyTable) EntriesSortedByCount() []Frequency {
 }
 
 // Tokens returns the unique tokens present in the table.
-// NOTE: The order can not be guarenteed since the underlying data structure uses a map.
+// NOTE: The order can not be guaranteed since the underlying data structure uses a map.
 func (ft *FrequencyTable) Tokens() []string {
 	ft.mu.RLock()
 	defer ft.mu.RUnlock()
@@ -193,7 +193,7 @@ func (ft *FrequencyTable) Save(w io.Writer) error {
 	return nil
 }
 
-// Update will calculate and update the token frequencies
+// Update will calculate and update the token frequencies.
 func (ft *FrequencyTable) Update() {
 	ft.mu.Lock()
 	defer ft.mu.Unlock()

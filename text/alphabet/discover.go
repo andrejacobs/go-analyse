@@ -92,7 +92,7 @@ func (p *DiscoverProcessor) SetProgressReporter(reporter processor.ProgressRepor
 	p.proc.SetProgressReporter(reporter)
 }
 
-// Letters return the discovered runes. Sounds like a tomb raider story :-D
+// Letters return the discovered runes. Sounds like a tomb raider story :-D.
 func (p *DiscoverProcessor) Letters() []rune {
 	return p.letters.Items()
 }

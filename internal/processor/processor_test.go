@@ -7,6 +7,7 @@ import (
 
 	"github.com/andrejacobs/go-analyse/internal/processor"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProcessor(t *testing.T) {
@@ -14,7 +15,7 @@ func TestProcessor(t *testing.T) {
 
 	result := ""
 	p := processor.NewProcessor()
-	p.ProcessFiles(context.Background(), paths, func(ctx context.Context, r io.Reader) error {
+	err := p.ProcessFiles(context.Background(), paths, func(ctx context.Context, r io.Reader) error {
 		data, err := io.ReadAll(r)
 		if err != nil {
 			return err
@@ -22,6 +23,7 @@ func TestProcessor(t *testing.T) {
 		result += string(data)
 		return nil
 	})
+	require.NoError(t, err)
 
 	assert.Equal(t, "The quick brown foxjumped over the lazy dog!", result)
 }
@@ -33,7 +35,7 @@ func TestProcessorWithProgress(t *testing.T) {
 	result := ""
 	p := processor.NewProcessor()
 	p.SetProgressReporter(&reporter)
-	p.ProcessFiles(context.Background(), paths, func(ctx context.Context, r io.Reader) error {
+	err := p.ProcessFiles(context.Background(), paths, func(ctx context.Context, r io.Reader) error {
 		data, err := io.ReadAll(r)
 		if err != nil {
 			return err
@@ -41,6 +43,7 @@ func TestProcessorWithProgress(t *testing.T) {
 		result += string(data)
 		return nil
 	})
+	require.NoError(t, err)
 
 	assert.Equal(t, "The quick brown foxjumped over the lazy dog!", result)
 	assert.Equal(t, 2, reporter.startedTotal)
@@ -54,7 +57,7 @@ func TestProcessorZip(t *testing.T) {
 
 	result := ""
 	p := processor.NewProcessor()
-	p.ProcessFiles(context.Background(), paths, func(ctx context.Context, r io.Reader) error {
+	err := p.ProcessFiles(context.Background(), paths, func(ctx context.Context, r io.Reader) error {
 		data, err := io.ReadAll(r)
 		if err != nil {
 			return err
@@ -62,6 +65,7 @@ func TestProcessorZip(t *testing.T) {
 		result += string(data)
 		return nil
 	})
+	require.NoError(t, err)
 
 	assert.Equal(t, "The quick brown foxjumped over the lazy dog!", result)
 }
@@ -73,7 +77,7 @@ func TestProcessorZipWithProgress(t *testing.T) {
 	result := ""
 	p := processor.NewProcessor()
 	p.SetProgressReporter(&reporter)
-	p.ProcessFiles(context.Background(), paths, func(ctx context.Context, r io.Reader) error {
+	err := p.ProcessFiles(context.Background(), paths, func(ctx context.Context, r io.Reader) error {
 		data, err := io.ReadAll(r)
 		if err != nil {
 			return err
@@ -81,6 +85,7 @@ func TestProcessorZipWithProgress(t *testing.T) {
 		result += string(data)
 		return nil
 	})
+	require.NoError(t, err)
 
 	assert.Equal(t, "The quick brown foxjumped over the lazy dog!", result)
 	assert.Equal(t, 1, reporter.startedTotal)
