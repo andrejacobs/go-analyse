@@ -99,7 +99,6 @@ check-formatting:
 check-lint:
 	@echo "Linting code"
 	go vet ./...
-	golangci-lint run
 ifneq (${CI}, true)
 	golangci-lint run
 	addlicense -check -c "Andre Jacobs" -l mit -ignore '.github/**' -ignore 'build/**' ./
