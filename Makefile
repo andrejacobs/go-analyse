@@ -56,12 +56,14 @@ build: versioninfo
 		ln -sf "$${ABS_CURRENT_EXECUTABLE}" "${EXEC_OUTPUT_DIR}/$${name#cmd/}"; \
 	done
 
-# Build and run
-# This is just an example of running one of the ./cmd compiled executables
-.PHONY: run
-run: build
-	@echo "Running: ./${EXEC_OUTPUT_DIR}/hello\n"
-	@./${EXEC_OUTPUT_DIR}/hello
+# Install each executable in the go/bin directory
+.PHONY: install
+install: build
+	$(eval GO_BIN_DIR := $(shell go env GOPATH)/bin)
+	@for name in ${CURRENT_OUTPUT_DIR}/*; do \
+		echo "Copying $${name} to ${GO_BIN_DIR}"; \
+		cp "$${name}" "${GO_BIN_DIR}"; \
+	done
 
 #------------------------------------------------------------------------------
 # Code quality assurance
