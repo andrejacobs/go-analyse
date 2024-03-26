@@ -23,7 +23,7 @@ package compiledinfo
 import "fmt"
 
 const (
-	defaultAppName = "helloworld"
+	defaultAppName = "TODO"
 )
 
 var (

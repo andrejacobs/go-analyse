@@ -138,7 +138,7 @@ func TestParseArgs(t *testing.T) {
 			os.Args = append(os.Args, strings.Split(tC.args, " ")...)
 
 			// Parse the args
-			opts, err := parseArgs()
+			opts, err := parseArgs(os.Stdout)
 			require.NoError(t, err)
 			// Reset flag package for next test
 			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)

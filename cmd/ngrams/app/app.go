@@ -37,7 +37,7 @@ import (
 // Main parses the command line arguments and runs the app.
 // Decoupled for unit-testing.
 func Main(stdOut io.Writer, stdErr io.Writer) error {
-	opts, err := parseArgs()
+	opts, err := parseArgs(stdOut)
 	if err != nil {
 		if errors.Is(err, ErrExitWithNoErr) {
 			return nil
@@ -330,7 +330,7 @@ var ErrExitWithNoErr = errors.New("not an error")
 
 // parseArgs will parse the command line arguments and create the slice of options required
 // to create the app.
-func parseArgs() ([]optionFunc, error) {
+func parseArgs(stdOut io.Writer) ([]optionFunc, error) {
 	opts := make([]optionFunc, 0, 10)
 
 	var outPath string
@@ -367,10 +367,10 @@ func parseArgs() ([]optionFunc, error) {
 	flag.BoolVar(&update, "update", false, "Update the existing ngram output file.")
 
 	var showVersion bool
-	flag.BoolVar(&showVersion, "v", false, "Display version information.")
 	flag.BoolVar(&showVersion, "version", false, "Display version information.")
 
 	var verbose bool
+	flag.BoolVar(&verbose, "v", false, "Display more information on STDOUT.")
 	flag.BoolVar(&verbose, "verbose", false, "Display more information on STDOUT.")
 
 	var progress bool
@@ -379,7 +379,7 @@ func parseArgs() ([]optionFunc, error) {
 	flag.Parse()
 
 	if showVersion {
-		printVersion(os.Stdout)
+		printVersion(stdOut)
 		return nil, ErrExitWithNoErr
 	}
 

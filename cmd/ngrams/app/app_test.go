@@ -30,6 +30,7 @@ import (
 	"testing"
 
 	"github.com/andrejacobs/go-analyse/cmd/ngrams/app"
+	"github.com/andrejacobs/go-analyse/internal/compiledinfo"
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/andrejacobs/go-analyse/text/ngrams"
 	"github.com/stretchr/testify/assert"
@@ -105,6 +106,12 @@ func TestApp(t *testing.T) {
 
 		//------------------------
 		// Happy paths
+
+		{desc: "version", args: "-version", testFunc: func(t *testing.T) {
+			stdOut, _, err := runMain()
+			assert.Contains(t, stdOut, compiledinfo.UsageNameAndVersion())
+			assert.NoError(t, err)
+		}},
 
 		// Letters
 
