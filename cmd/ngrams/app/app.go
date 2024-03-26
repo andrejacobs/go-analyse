@@ -381,6 +381,8 @@ func parseArgs(stdOut io.Writer) ([]optionFunc, error) {
 	var availableLangs bool
 	flag.BoolVar(&availableLangs, "available", false, "List the available languages.")
 
+	flag.Usage = customUsage
+
 	flag.Parse()
 
 	if showVersion {
@@ -571,4 +573,82 @@ func (v *verboseReporter) Reader(r io.Reader) io.Reader {
 }
 
 func (v *verboseReporter) AddToTotalSize(add int64) {
+}
+
+//-----------------------------------------------------------------------------
+// Usage
+
+func customUsage() {
+	w := flag.CommandLine.Output()
+
+	fmt.Fprintf(w, "Usage of %s: (version: %s)\n", compiledinfo.UsageName(), compiledinfo.VersionString())
+	fmt.Fprintf(w, `
+  ngrams [options] [-o output] file ...
+
+INPUT:
+  file (one or more)
+	The files used to generate the ngrams from.
+	Zip files are also supported.
+
+OPTIONS:
+  -a, --lang string
+  	Alphabet language code. E.g. en = English (default "en")
+
+  --available
+  	List the available languages. Displays the built-in languages if no language file is provided.
+
+  -d, --discover
+  	Discover the non-whitespace letters used in the input sources and write a languages file to the out path.
+
+  -l, --letters
+  	Create letter ngram combinations. E.g. bigrams st,er,ae,ie. (default true)
+
+  -w, --words
+  	Create word ngram combinations. E.g. bigrams "he jumped", "she walked"
+
+  --languages string
+  	Path to a languages definition file. See the format section for more details.
+
+  -o, --out string
+  	Path to where the output will be stored. See the format section for more details.
+	TODO: document the 2 modes (discover) and format
+	TODO: document the naming convention of default
+
+  -s, --size int
+  	Ngram size. The number of letters or words that form a single ngram. (default 1)
+
+  -u, --update
+  	Update the existing ngram output file.
+
+  --progress
+  	Display progress updates on STDOUT.
+
+  -v, --verbose
+  	Display more information on STDOUT.
+
+  --version
+  	Display version information.
+
+  -h, --help
+  	Display the help information.
+
+FORMATS:
+  output.csv: Used by --out to write the ngram frequency table.
+  	#token,count,percentage
+	the,142,0.094522
+	...
+
+  languages.csv: Used by --languages to provide supported languages.
+  	#code,name,letters
+	af,Afrikaans,abcdefghijklmnopqrstuvwxyzáêéèëïíîôóúû
+	...
+
+  	When --discover is used the file format will be a CSV like the following:
+  	  #code,name,letters
+  	  unknown,unknown,abc...
+
+EXAMPLES:
+  TODO some examples
+`)
+
 }
