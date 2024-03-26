@@ -8,7 +8,6 @@
 -   [] Document that the Word ngrams doesn't rip out punctionation
     -   [] Add an extra update task that can be run to filter out certain things. For example rip out where the words are
         just "\* \*" etc.
--   [] Add a command to list out the available languages (so if no lang file, show builtins)
 
 ## Done
 
@@ -19,3 +18,4 @@
 -   [x] Tokens, monogram should have specialized fast path. Do a benchmark first and after. Document it.
 -   [x] Support reading from a zip file
 -   [x] -v should be -verbose, so make -version (instead of -v)
+-   [x] Add a command to list out the available languages (so if no lang file, show builtins)

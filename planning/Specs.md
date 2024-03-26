@@ -40,12 +40,13 @@ Overview of the commands that will be available.
     -   `-o, --out` The file path to write the results to. (csv format). See `--discover` for when this file is a language file.
     -   `-d, --discover` Instead of creating the ngram frequency table this will discover the non whitespace characters used and write a language file to `--out` path.
     -   `-u, --update` Load the frequency table specified by `--out` and then update as new data is parsed by the corpora.
+    -   `--available` Lists the available languages. If --languages file is specified then list out those languages else the built-in ones.
 
     -   `-h, --help`
 
         -   Displays usage and help information.
 
-    -   `-v, --version`
+    -   `--version`
         -   Displays the version of the tool.
 
 What options work with what?
@@ -63,6 +64,7 @@ What options work with what?
         -   Would then need to think about allowing netscape style cookies.txt and also setting the user-agent.
         -   What about retries? exponential back-off.
     -   Progress bar `--progress`
+    -   Verbose `-v, --verbose`
 
 ## Module summary
 

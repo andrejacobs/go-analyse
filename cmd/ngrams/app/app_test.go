@@ -113,6 +113,18 @@ func TestApp(t *testing.T) {
 			assert.NoError(t, err)
 		}},
 
+		{desc: "available languages - built-in", args: "-available", testFunc: func(t *testing.T) {
+			stdOut, _, err := runMain()
+			assert.Contains(t, stdOut, "af : Afrikaans")
+			assert.NoError(t, err)
+		}},
+
+		{desc: "available languages", args: fmt.Sprintf("--available --languages %s", validLanguages), testFunc: func(t *testing.T) {
+			stdOut, _, err := runMain()
+			assert.Contains(t, stdOut, "coding : Coding")
+			assert.NoError(t, err)
+		}},
+
 		// Letters
 
 		{desc: "monograms en-control", args: fmt.Sprintf("-s 1 -o %s %s", outPath, inputENControl), testFunc: func(t *testing.T) {

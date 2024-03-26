@@ -26,12 +26,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/andrejacobs/go-analyse/internal/compiledinfo"
 	"github.com/andrejacobs/go-analyse/text/alphabet"
 	"github.com/andrejacobs/go-analyse/text/ngrams"
 	"github.com/schollz/progressbar/v3"
+	"golang.org/x/exp/maps"
 )
 
 // Main parses the command line arguments and runs the app.
@@ -376,10 +378,20 @@ func parseArgs(stdOut io.Writer) ([]optionFunc, error) {
 	var progress bool
 	flag.BoolVar(&progress, "progress", false, "Display progress updates on STDOUT.")
 
+	var availableLangs bool
+	flag.BoolVar(&availableLangs, "available", false, "List the available languages.")
+
 	flag.Parse()
 
 	if showVersion {
 		printVersion(stdOut)
+		return nil, ErrExitWithNoErr
+	}
+
+	if availableLangs {
+		if err := printAvailableLanguages(stdOut, langPath); err != nil {
+			return nil, err
+		}
 		return nil, ErrExitWithNoErr
 	}
 
@@ -469,6 +481,29 @@ func resolve() optionFunc {
 
 func printVersion(w io.Writer) {
 	_, _ = io.WriteString(w, compiledinfo.UsageNameAndVersion()+"\n")
+}
+
+func printAvailableLanguages(w io.Writer, langPath string) error {
+	var langMap alphabet.LanguageMap
+	if langPath != "" {
+		var err error
+		langMap, err = alphabet.LoadLanguagesFromFile(langPath)
+		if err != nil {
+			return err
+		}
+	} else {
+		langMap = alphabet.BuiltinLanguages()
+	}
+
+	keys := maps.Keys(langMap)
+	slices.Sort(keys)
+
+	for _, k := range keys {
+		v := langMap[k]
+		fmt.Fprintf(w, "%s : %s\n", k, v.Name)
+	}
+
+	return nil
 }
 
 // Check if the path exists.
