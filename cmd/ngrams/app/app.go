@@ -611,8 +611,12 @@ OPTIONS:
 
   -o, --out string
   	Path to where the output will be stored. See the format section for more details.
-	TODO: document the 2 modes (discover) and format
-	TODO: document the naming convention of default
+  	The type of file being created depends on whether or not the --discover mode is used.
+  	In normal mode the output file will be the ngram frequency table.
+  	In discover mode the output file will be a languages file.
+  	If the --out option is not specified then the output file will be derived in the following way:
+  	  <language-code>-<words|letters>-<size>.csv
+  	  or languages.csv if --discover mode is used.
 
   -s, --size int
   	Ngram size. The number of letters or words that form a single ngram. (default 1)
@@ -647,8 +651,6 @@ FORMATS:
   	  #code,name,letters
   	  unknown,unknown,abc...
 
-EXAMPLES:
-  TODO some examples
 `)
 
 }
