@@ -2,16 +2,109 @@
 
 Analysis related code written in Go
 
+## Install
+
+## N-grams
+
 ## Supported languages
 
-Package `text/alphabet` is used to describe the valid lowercase letters (runes) for a language that we can then
-run various analysis on a given corpora.
+Package `text/alphabet` is used to describe the valid lowercase letters (runes) for a language that can then
+be used to run various analysis on for a given corpora.
 
 The default set of languages are generated from the `text/alphabet/testdata/languages.csv` file and by running
 the command `make go-generate`.
 
-## TODO
+## Packages
 
-Disclaimer about not being a linguistic expert. Alphabet in this code means a valid set of Unicode runes that
-will be used to determine n-grams. Letter in this code means a Unicode rune (generally no numbers or symbols).
-Language means a set of identifyable writing Letters (e.g. EN = English = Latin Alphabet).
+### `text/alphabet`
+
+Provides support to describe a set of languages and the alphabets used in the writing style for that language.
+
+Built-in languages: (provided by "text/alphabet/languages.go")
+
+```go
+lang, err := alphabet.Builtin("af")
+print(lang.Name) // Afrikaans
+
+lang := alphabet.MustBuiltin("af") // Will panic if the language does not exist
+
+// The map of language code (generally the ISO 639 set 1 code) to the Language struct
+languages := alphabet.BuiltinLanguages()
+```
+
+To update the built-in languages:
+
+1. Update the "testdata/languages.csv" file.
+2. Run `make go-generate` which will then create the file "text/alphabet/languages.go"
+
+Load a languages file:
+
+example.csv
+
+```
+#code,name,letters
+af,Afrikaans,abcdefghijklmnopqrstuvwxyzáêéèëïíîôóúû
+en,English,abcdefghijklmnopqrstuvwxyz
+```
+
+```go
+languages, err := alphabet.LoadLanguagesFromFile("example.csv")
+```
+
+To discover the unique unicode runes used in files:
+
+```go
+p := alphabet.NewDiscoverProcessor()
+err := p.ProcessFiles(context.Background(), []string{"discover1.txt", "example2.txt"})
+
+// Save the discovered runes in the supported CSV format
+err = p.Save("example.csv")
+
+languages, err := alphabet.LoadLanguagesFromFile("example.csv")
+```
+
+### `text/ngrams`
+
+Provides support to calculate the frequency tables for letter and word n-grams.
+Examples of ngrams:
+
+-   letters
+
+    -   monograms: a, b, c, d
+    -   bigrams: he, sh, th, ng, in
+    -   trigrams: the, fox
+
+-   words
+    -   monograms: apple, the, quick
+    -   bigrams: the quick, fox jumped
+    -   trigrams: the quick brown, fox jumped over
+
+To calculate the n-grams from input files:
+
+```go
+// Word bigrams using the built-in "en" language
+p := ngrams.NewFrequencyProcessor(ngrams.ProcessWords, alphabet.MustBuiltin("en"), 2)
+err := p.LoadFrequenciesFromFile("input-corpus.txt")
+
+// The calculated frequency table
+ft := p.FrequencyTable()
+
+// To save the frequency table
+err = p.Save("en-word-bigrams.csv")
+```
+
+Frequency table file format in CSV
+
+```
+#token,count,percentage
+the,5,0.1
+fox,2,0.03
+```
+
+## Glossary
+
+This section describes in general the words used and the meaning in the context of this code repository.
+
+-   alphabet: a valid set of unicode runes that describes the writing letters used in a language.
+-   language: a set of identifyable writing letters that describes a language. Identified by an ISO 639 set 1 code (e.g. EN = English).
+-   letter: a lowercased unicode rune (generally no numbers or symbols).

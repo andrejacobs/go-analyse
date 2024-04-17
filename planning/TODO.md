@@ -1,5 +1,6 @@
 # TODO
 
+-   [] Build and test on windows
 -   [] Ensure the output file can be created. No point in spinning minutes through data to fail at the last step.
 -   [] Support clean shutdown. Ctrl+c, context cancel and ensure freq table is saved
 -   [] Appears the csv reader support stripping out comments, so I should use that instead (Comment rune on reader)
