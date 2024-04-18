@@ -198,7 +198,7 @@ func TestProcessorProcessFiles(t *testing.T) {
 
 		// Zip file support
 		{desc: "zip file",
-			paths: []string{"testdata/collection1.ZIP"},
+			paths: []string{"testdata/collection1.zip"},
 			lang:  alphabet.MustBuiltin("en"), tokenSize: 1, words: true,
 			testFunc: func(t *testing.T, p *ngrams.FrequencyProcessor) {
 				ft, err := loadWordFrequenciesFromFiles([]string{
