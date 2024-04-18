@@ -60,9 +60,10 @@ build: versioninfo
 .PHONY: install
 install: build
 	$(eval GO_BIN_DIR := $(shell go env GOPATH)/bin)
+	mkdir -p "${GO_BIN_DIR}"
 	@for name in ${CURRENT_OUTPUT_DIR}/*; do \
-		echo "Copying $${name} to ${GO_BIN_DIR}"; \
-		cp "$${name}" "${GO_BIN_DIR}"; \
+		echo "Copying $${name} to ${GO_BIN_DIR}/"; \
+		cp "$${name}" "${GO_BIN_DIR}/"; \
 	done
 
 #------------------------------------------------------------------------------
