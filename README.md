@@ -2,9 +2,127 @@
 
 Analysis related code written in Go
 
-## Install
+Please see https://github.com/andrejacobs/datasets-text for example corpora and pre-generated output produced by the tools from this repository.
+
+## Install from source
+
+1. Ensure you have at least Go 1.22 installed: https://go.dev/dl/
+1. Clone the repository
+
+    ```
+    git clone git@github.com:andrejacobs/go-analyse.git
+    ```
+
+1. Build
+
+    ```
+    cd go-analyse/
+    make build
+
+    # Executables are created at: build/bin/<OS>/<CPU_ARCH> and
+    # symlinked as: build/bin/<CLI>
+    ```
+
+1. Install
+
+    ```
+    make install
+
+    # Executables are copied to: $(go env GOPATH)/bin
+    # Ensure $(go env GOPATH)/bin is in your $PATH
+    ```
 
 ## N-grams
+
+The `ngrams` CLI app can be used to generate letter and word ngram frequency tables from a set of input corpora.
+
+General usage:
+
+```
+ngrams [options] [-o output] file ...
+```
+
+Zip files are also supported as input files.
+
+See `ngrams --help` for more details on the supported options.
+
+### Examples:
+
+Basic usage:
+
+```
+# Calculate the letter bigram frequency for Afrikaans (af)
+
+$ ngrams --size 2 --lang af af-corpus.zip
+# produces the output file: af-letters-2.csv
+
+
+
+# Calculate the word bigram frequency for Afrikaans (af)
+
+$ ngrams --words --size 2 --lang af af-corpus.zip
+# produces the output file: af-words-2.csv
+
+
+
+# Specify the output file
+
+$ ngrams --size 2 --lang af --out /path/to/output.csv af-corpus.zip
+```
+
+With a progress bar:
+
+```
+$ ngrams --progress --words --size 2 --lang af af-corpus.zip
+[1/1]  47% |████████        | (49/103 MB, 19 MB/s) [2s:2s]
+```
+
+With more verbose information:
+
+```
+$ ngrams --verbose --words --size 2 --lang af af-corpus.zip
+Language: af - Afrikaans
+Generating 2 word ngrams...
+[1/1] af-corpus.zip
+Saving frequency table...
+Created frequency table at: "./af-words-2.csv"
+```
+
+To discover the non-whitespace lowercased letters (unicode runes) used in a corpus:
+
+```
+$ ngrams --discover corpus1.zip corpus2.zip samples.txt
+# produces the output file: languages.csv
+
+$ cat languages.csv
+#code,name,letters
+unknown,unknown,"!""$%&'()*+,-./0123456789:;<>?@`abcdefghijklmnopqrstuvwxyz~£¥¦§¨«¬®°±²³´µ¶·¹º»¼½¾¿×àáâãäåçèéêëìíîïñòóôõö÷øùúûüýÿďėęīķńŉōőšűȇȏʼ˚˜́̈̓́ίαβγδεικπρςσυωόавгеийклнрсчюёїў٪٬აბდევიკლნრსუქყệὶ‐‑‒–—―‘’‚“”„‡•…‰′″‹›⁰€ℓ™−╔╗♦地憂抧抯揕揟揤梐梕梘梞梟梥梬棐璴璶璼痴醤鉶鑞閚阹雃雐雔雗雛雝飀飊飏飔馻骹黮"%
+```
+
+To see the list of available languages:
+
+```
+# Built-in languages
+
+$ ngrams --available
+af : Afrikaans
+ar : Arabic
+da : Danish
+de : German
+en : English
+es : Spanish
+et : Estonian
+fi : Finnish
+fr : French
+nl : Dutch
+sv : Swedish
+
+# Supply a custom languages files
+
+$ ngrams --available --languages languages.csv
+af : Afrikaans
+golang: Go Programming Language
+```
 
 ## Supported languages
 

@@ -10,6 +10,7 @@
 -   [] Document that the Word ngrams doesn't rip out punctionation
     -   [] Add an extra update task that can be run to filter out certain things. For example rip out where the words are
         just "\* \*" etc.
+-   [] Add github actions to build release binaries for supported platforms. Update README for installation steps.
 
 ## Done
 
